@@ -29,27 +29,27 @@
 
 void GICBSNode::clear()
 {
-	//Clear expanded node's conflicts lists. in order to save some memory
-	/*if (cons_strategy == constraint_strategy::R_CBSH)
-	{
-	for (int i = 0; i < curr->mdds.size(); i++)
-	{
-	if (curr->mdds[i] != NULL)
-	{
-	curr->mdds[i]->numPointers--;
-	if (curr->mdds[i]->numPointers == 0)
-	delete curr->mdds[i];
-	}
-	}
-	}*/
+    //Clear expanded node's conflicts lists. in order to save some memory
+    /*if (cons_strategy == constraint_strategy::R_CBSH)
+    {
+    for (int i = 0; i < curr->mdds.size(); i++)
+    {
+    if (curr->mdds[i] != NULL)
+    {
+    curr->mdds[i]->numPointers--;
+    if (curr->mdds[i]->numPointers == 0)
+    delete curr->mdds[i];
+    }
+    }
+    }*/
 
-	//single.clear();
+    //single.clear();
 
-	//conflict.reset();
-	
-	//paths.clear();
+    //conflict.reset();
 
-	//agents_updated.clear();
+    //paths.clear();
+
+    //agents_updated.clear();
 }
 /*GICBSNode::GICBSNode(int agent_id, GICBSNode* parent, double g_val, double num_of_collisions, int time_expanded, double sum_min_f_vals)
 	:parent(parent)
