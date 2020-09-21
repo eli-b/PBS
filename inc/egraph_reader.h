@@ -31,23 +31,27 @@ using boost::hash;//ext::hash;  // or __gnu_cxx::hash, or maybe tr1::hash, depen
 // this is needed because otherwise we'll have to define the specilized template inside std namespace
 struct IntHasher
 {
-  std::size_t operator()(const int n) const
-  {
-    using boost::hash;
-    //    cout << "COMPUTE HASH: " << *n << " ; Hash=" << hash<int>()(n->id) << endl;
-    //cout << "   Pointer Address: " << n << endl;
-    return ( hash<int>()(n) );
-  }
+    std::size_t operator()(const int n) const
+    {
+        using boost::hash;
+        //    cout << "COMPUTE HASH: " << *n << " ; Hash=" << hash<int>()(n->id) << endl;
+        //cout << "   Pointer Address: " << n << endl;
+        return (hash<int>()(n));
+    }
 };
 
 // (BGL bundeled properties)
 // this struct contains the internal properties of a vertex
 // Since we want a concise representation of EGraphs, we link
 // each node in the original search space (Node) with an EGraph (VertexDesc)
-struct VertexDesc {
-  int node_id;  // in our case, represents the cell id in the grid
-  VertexDesc(const int id) {this->node_id = id;}
-  VertexDesc() {}  // (needed by boost)
+struct VertexDesc
+{
+    int node_id;  // in our case, represents the cell id in the grid
+    VertexDesc(const int id)
+    { this->node_id = id; }
+
+    VertexDesc()
+    {}  // (needed by boost)
 };
 
 // <vertices container , edges container , (un)directed , vertex_propert, edge_property, graph_property>
@@ -72,31 +76,43 @@ struct eqVertex
 */
 // we maintain a hash table that maps grid's ids to vertex_descriptor
 // then we can do all
-class EgraphReader {
- public:
-  eg_Vertex u1, u2;  // declaring vertices u1,u2
-  eg_Edge e1;  // declaring edge e1
-  my_digraph* e_graph;
+class EgraphReader
+{
+public:
+    eg_Vertex u1, u2;  // declaring vertices u1,u2
+    eg_Edge e1;  // declaring edge e1
+    my_digraph* e_graph;
 
-  // generate hash_map (key is an int (node_id), data is a eg_Vertex (corresponding node on the EGraph),
-  //                    check: hasher is hash<int>()
-  //                    check: equality of eg_Vertex is corrent
-  boost::unordered_map< int, eg_Vertex > nodes;  // maps node_id to its vertex_descriptor
-  boost::unordered_map< int, eg_Vertex >::iterator it;
+    // generate hash_map (key is an int (node_id), data is a eg_Vertex (corresponding node on the EGraph),
+    //                    check: hasher is hash<int>()
+    //                    check: equality of eg_Vertex is corrent
+    boost::unordered_map<int, eg_Vertex> nodes;  // maps node_id to its vertex_descriptor
+    boost::unordered_map<int, eg_Vertex>::iterator it;
 
-  EgraphReader();  // generate an empty egraph
-  EgraphReader(string fname);
-  EgraphReader(int* edgesMap, const MapLoader* ml);
-  void printToDOT(string fname);
-  bool isEdge(int n1, int n2) const;
-  vector< pair<int, int> >* getAllEdges();
-  bool containVertex(int n_id) const;
-  void removeVertex(int n_id);
-  void addEdge(int n1_id, int n2_id);
-  void addVertices(const vector<int>* v_list);
-  void saveToFile(string fname);
-  void createCrissCrossHWY(MapLoader* ml);
-  ~EgraphReader();
+    EgraphReader();  // generate an empty egraph
+    EgraphReader(string fname);
+
+    EgraphReader(int* edgesMap, const MapLoader* ml);
+
+    void printToDOT(string fname);
+
+    bool isEdge(int n1, int n2) const;
+
+    vector<pair<int, int>>* getAllEdges();
+
+    bool containVertex(int n_id) const;
+
+    void removeVertex(int n_id);
+
+    void addEdge(int n1_id, int n2_id);
+
+    void addVertices(const vector<int>* v_list);
+
+    void saveToFile(string fname);
+
+    void createCrissCrossHWY(MapLoader* ml);
+
+    ~EgraphReader();
 };
 
 #endif
