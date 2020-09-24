@@ -1,3 +1,6 @@
+#include <random>  // For random_device
+#include <algorithm>  // For shuffle
+
 #include "GICBSSearch.h"
 //#define ROOT
 //#define DEBUG
@@ -819,6 +822,9 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
     paths.resize(num_of_agents, NULL);
     paths_found_initially.resize(num_of_agents);
 
+    //std::random_device rd();
+    std::mt19937 g(123 /*rd()*/);  // constant seed TODO: Feed it the seed parameter.
+
     if (fixed_prior)
     {
         int iteration = 0;
@@ -845,7 +851,8 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
             {
                 ordering[i] = i;
             }
-            std::random_shuffle(ordering.begin(), ordering.end());
+            std::shuffle(ordering.begin(), ordering.end(), g);
+            // Go over agents in decreasing order of priority
             for (int i = 0; i < num_of_agents; i++)
             {
                 int a = ordering[i];

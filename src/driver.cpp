@@ -36,6 +36,7 @@ int main(int argc, char** argv)
             ("agents,a", po::value<std::string>()->required(), "input file for agents")
             ("output,o", po::value<std::string>()->required(), "output file for schedule")
             ("agentNum,k", po::value<int>()->default_value(0), "number of agents")
+            ("seed,s", po::value<int>()->default_value(123), "random seed")
             ("fixedOrder,f", po::value<bool>()->default_value(true),
              "fixed order. true->Prioritized Search, false->PBS");
 
@@ -49,7 +50,7 @@ int main(int argc, char** argv)
     }
 
     po::notify(vm);
-    srand((int) time(0));
+    srand(vm["seed"].as<int>());
 
     // read the map file and construct its two-dim array
     MapLoader ml(vm["map"].as<string>());

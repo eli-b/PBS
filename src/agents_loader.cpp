@@ -2,17 +2,15 @@
 
 #include "agents_loader.h"
 #include <string>
-#include <cstring>
 #include <iostream>
-#include <cassert>
 #include <fstream>
-#include<boost/tokenizer.hpp>
+#include <boost/tokenizer.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
 #include <utility>
-#include <algorithm>  // for remove_if
-#include <ctime>
+#include <algorithm>  // for remove_if, shuffle
+#include <random> // for random_device
 
 using namespace boost;
 using namespace std;
@@ -101,6 +99,9 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader& ml, int agentsNum = 0)
         for (int i = 0; i < ml.rows * ml.cols; i++)
             goals[i] = false;
         // Choose random start locations
+        //std::random_device rd();
+        std::mt19937 g(123 /*rd()*/);  // constant seed. TODO: Feed it the seed parameter.
+
         for (int k = 0; k < agentsNum; k++)
         {
             int x = rand() % ml.rows, y = rand() % ml.cols;
@@ -117,7 +118,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader& ml, int agentsNum = 0)
                 for (int walk = 0; walk < RANDOM_WALK_STEPS; walk++)
                 {
                     int directions[] = { 0, 1, 2, 3, 4 };
-                    random_shuffle(directions, directions + 5);
+                    shuffle(directions, directions + 5, g);
                     int i = 0;
                     for (; i < 5; i++)
                     {
@@ -139,7 +140,7 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader& ml, int agentsNum = 0)
                 while (!flag)
                 {
                     int directions[] = { 0, 1, 2, 3, 4 };
-                    random_shuffle(directions, directions + 5);
+                    shuffle(directions, directions + 5, g);
                     int i = 0;
                     for (; i < 5; i++)
                     {
