@@ -914,15 +914,6 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
     //ll_min_f_vals = ll_min_f_vals_found_initially;
     //paths_costs = paths_costs_found_initially;
 
-    // generate dummy start and update data structures
-    if (solution_cost > 0)
-    {
-        updatePaths(dummy_start);
-        findConflicts(*dummy_start);
-        assert(dummy_start->conflict == nullptr);
-    }
-
-
     if (solution_cost != -2)
     {
 
