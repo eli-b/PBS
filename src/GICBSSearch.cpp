@@ -465,46 +465,50 @@ bool GICBSSearch::runGICBSSearch()
     runtime_updatepaths = 0;
     runtime_updatecons = 0;
     // start is already in the open_list
-    //upper_bound = DBL_MAX;
+    GICBSNode* curr = nullptr;
     while (!open_list.empty() && !solution_found)
     {
-        // break after 5 min
+        // break after 1 minute
         runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
         if (runtime > TIME_LIMIT || HL_num_expanded > 1000000)
-        {  // timeout after 1 minutes
+        {  // timeout after 1 minutes or 1000000 expanded nodes
             cout << "TIMEOUT  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
                  HL_num_expanded << " ; " << HL_num_generated << " ; " <<
                  LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " << endl;
 
-            std::cout << "	Runtime Sumarry: lowlevel = " << runtime_lowlevel << " ; listoperation = "
-                      << runtime_listoperation <<
-                      " ; conflictdetection = " << runtime_conflictdetection << " ; computeh = " << runtime_computeh <<
-                      " ; updatepaths = " << runtime_updatepaths << " ; collectcons = " << runtime_updatecons
+            std::cout << "	Runtime summary: lowlevel = " << runtime_lowlevel / CLOCKS_PER_SEC << " ; listoperation = "
+                      << runtime_listoperation / CLOCKS_PER_SEC <<
+                      " ; conflictdetection = " << runtime_conflictdetection / CLOCKS_PER_SEC << " ; computeh = " << runtime_computeh / CLOCKS_PER_SEC <<
+                      " ; updatepaths = " << runtime_updatepaths / CLOCKS_PER_SEC << " ; collectcons = " << runtime_updatecons / CLOCKS_PER_SEC
                       << std::endl;
 
-            double count = 0, value = 0, maxDepth = 0;
-            GICBSNode* curr = NULL;
-            bool open_empty = false;
-            if ((open_list.empty()))
-                open_empty = true;
-            while (!open_list.empty())
+            if (curr != nullptr)
+                std::cout << "Depth of last node PBS worked on: " << curr->depth << std::endl;
+            if (!open_list.empty())
             {
-                curr = open_list.top();
-                open_list.pop();
-                if (curr->depth > maxDepth)
-                    maxDepth = curr->depth;
-                if (curr->f_val > value + 0.001)
+                // Print the state of OPEN
+                double countSameF = 0;
+                double currF = open_list.top()->f_val;
+                double maxDepth = 0;
+
+                std::cout << "F-value counts in OPEN: " << std::endl;
+                while (!open_list.empty())
                 {
-                    cout << "				#(f=" << value << ") = " << count << endl;
-                    count = 1;
-                    value = curr->f_val;
+                    curr = open_list.top();
+                    open_list.pop();
+                    if (curr->depth > maxDepth)
+                        maxDepth = curr->depth;
+                    if (curr->f_val > currF + 0.001)
+                    {
+                        cout << "				#(f=" << currF << ") = " << countSameF << endl;
+                        countSameF = 1;
+                        currF = curr->f_val;
+                    }
+                    else
+                        countSameF++;
                 }
-                else
-                    count++;
-            }
-            if (!open_empty)
-            {
-                std::cout << "Depth of last node: " << curr->depth << " ; MaxDepth = " << maxDepth << std::endl;
+                cout << "				#(f=" << currF << ") = " << countSameF << endl;
+                std::cout << "Max depth in OPEN: " << maxDepth << std::endl;
             }
             else
             {
@@ -514,7 +518,7 @@ bool GICBSSearch::runGICBSSearch()
             break;
         }
         t1 = std::clock();
-        GICBSNode* curr = open_list.top();
+        curr = open_list.top();
 
         open_list.pop();
         runtime_listoperation += std::clock() - t1;
