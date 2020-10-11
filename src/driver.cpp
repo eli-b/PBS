@@ -105,6 +105,9 @@ int main(int argc, char** argv)
           vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << endl;
     stats.close();
 
-    return 0;
+    if (res)
+        return 0;
+    else
+        return 1;
 
 }
