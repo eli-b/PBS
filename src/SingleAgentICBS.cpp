@@ -277,7 +277,7 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
             }
         }  // end for loop that generates successors
         // update FOCAL if min f-val increased
-        if (open_list.size() == 0)  // in case OPEN is empty, no path found...
+        if (open_list.empty())  // in case OPEN is empty, no path found...
             break;
         LLNode* open_head = open_list.top();
         if (open_head->getFVal() > min_f_val)
@@ -317,7 +317,7 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
             cout << endl;
             */
         }
-        if (focal_list.size() == 0)
+        if (focal_list.empty())
             std::cout << "ERROR!" << std::endl;
     }  // end while loop
     // no path found

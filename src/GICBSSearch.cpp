@@ -746,7 +746,7 @@ bool GICBSSearch::runGICBSSearch()
 
         curr->clear();
         t1 = std::clock();
-        if (open_list.size() == 0)
+        if (open_list.empty())
         {
             solution_found = false;
             break;
