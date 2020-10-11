@@ -84,10 +84,10 @@ void GICBSSearch::findConflicts(GICBSNode& curr)
     return;
 }
 
-int GICBSSearch::computeCollidingTeams()
+// Based on the <paths> member. Consider making it take a node parameter.
+int GICBSSearch::countCollidingPairs()
 {
     int result = 0;
-    //vector<bool> hasConflicts(num_of_agents, false);
     for (int a1 = 0; a1 < num_of_agents; a1++)
     {
         for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
@@ -113,6 +113,8 @@ int GICBSSearch::computeCollidingTeams()
                     break;
                 }
             }
+
+            // Check for a vertex collision after one of the agents has finished its path
             if (!isColliding && paths[a1]->size() != paths[a2]->size())
             {
                 int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
@@ -369,7 +371,7 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     t1 = std::clock();
     //findConflicts(*node);
     runtime_conflictdetection += std::clock() - t1;
-    node->num_of_collisions = computeCollidingTeams();
+    //node->num_of_colliding_pairs = countCollidingPairs();
 
     // update handles
     node->open_handle = open_list.push(node);
@@ -544,12 +546,12 @@ bool GICBSSearch::runGICBSSearch()
                  LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; ";
             cout << endl;
 //#ifdef DEBUG
-//			int conflictNum = computeNumOfCollidingAgents();
-//			if(conflictNum > 0)
+//			int numCollidingPairs = countCollidingPairs();
+//			if (numCollidingPairs > 0)
 //				std::cout << "ERROR!" << std::endl;
 //			std::cout << std::endl << "****** Solution: " << std::endl;
-//			printPaths(*curr);
-//#endif		
+//			printPaths();
+//#endif
             break;
         }
 
@@ -693,7 +695,7 @@ bool GICBSSearch::runGICBSSearch()
         {
             std::cout	<< "Generate #" << n1->time_generated
                             << " with cost " << n1->g_val
-                            << " and " << n1->num_of_collisions << " conflicts " <<  std::endl;
+                            << " and " << n1->num_of_colliding_pairs << " conflicts " <<  std::endl;
         }
         else
         {
@@ -703,7 +705,7 @@ bool GICBSSearch::runGICBSSearch()
         {
             std::cout	<< "Generate #" << n2->time_generated
                             << " with cost " << n2->g_val
-                            << " and " << n2->num_of_collisions << " conflicts " << std::endl;
+                            << " and " << n2->num_of_colliding_pairs << " conflicts " << std::endl;
         }
         else
         {

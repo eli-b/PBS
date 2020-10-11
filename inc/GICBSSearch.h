@@ -70,7 +70,7 @@ public:
 
     void findConflicts(GICBSNode& curr);
 
-    int computeCollidingTeams();
+    int countCollidingPairs();
 
     //inline bool updateGICBSNode(GICBSNode* leaf_node, GICBSNode* root_node);
     //inline void updatePaths(GICBSNode* curr, GICBSNode* root_node);
