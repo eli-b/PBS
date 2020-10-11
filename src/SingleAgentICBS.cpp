@@ -347,21 +347,10 @@ SingleAgentICBS::SingleAgentICBS(int id, int start_location, int goal_location,
     this->min_f_val = 0;
     //this->num_non_hwy_edges = 0;
     this->num_col = num_col;
-
-    // initialize allNodes_table (hash table)
-    empty_node = new LLNode();
-    empty_node->loc = -1;
-    deleted_node = new LLNode();
-    deleted_node->loc = -2;
-    //allNodes_table.set_empty_key(empty_node);
-    //allNodes_table.set_deleted_key(deleted_node);
-
 }
 
 
 SingleAgentICBS::~SingleAgentICBS()
 {
-    delete[] my_map;
-    delete (empty_node);
-    delete (deleted_node);
+    // Do NOT delete the map, it's shared by multiple single agent solvers, and isn't owned by this class anyway
 }
