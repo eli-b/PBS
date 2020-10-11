@@ -29,7 +29,7 @@ public:
     heap_open_t open_list;
     //heap_focal_t focal_list;
     //hashtable_t allNodes_table;
-    list<GICBSNode*> allNodes_table;
+    list<std::unique_ptr<GICBSNode>> allNodes_table;
 
     bool solution_found;
     int solution_cost;

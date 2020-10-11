@@ -30,7 +30,7 @@ public:
     /* typedef boost::heap::fibonacci_heap< LLNode*, boost::heap::compare<LLNode::compare_node> > heap_open_t; */
     /* typedef boost::heap::fibonacci_heap< LLNode*, boost::heap::compare<LLNode::secondary_compare_node> > heap_focal_t; */
 
-    typedef boost::unordered_map<LLNode*, LLNode*, LLNode::NodeHasher, LLNode::eqnode> hashtable_t;
+    typedef std::unordered_map<LLNode*, std::unique_ptr<LLNode>, LLNode::NodeHasher, LLNode::eqnode> hashtable_t;
     // note -- hash_map (key is a node pointer, data is a node handler,
     //                   NodeHasher is the hash function to be used,
     //                   eqnode is used to break ties when hash values are equal)
@@ -94,8 +94,6 @@ public:
 
     bool findPath(vector<PathEntry>& path, double f_weight, const vector<vector<bool>>& priorities,
                   const vector<vector<PathEntry>*>& current_paths, size_t max_plan_len, double lowerbound);
-
-    inline void releaseClosedListNodes(hashtable_t* allNodes_table);
 
     SingleAgentICBS(int id, int start_location, int goal_location, const bool* my_map, int map_size,
                     const int* moves_offset, int num_col);
