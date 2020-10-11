@@ -68,11 +68,6 @@ public:
 
     hashtable_t allNodes_table;
 
-    // used in hash table and would be deleted from the d'tor
-    LLNode* empty_node;
-    LLNode* deleted_node;
-
-
     /* return a pointer to the path found.
     */
     //std::shared_ptr<vector<PathEntry>> getPath() { return path; }  // return a pointer to the path found;

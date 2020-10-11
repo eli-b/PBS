@@ -802,16 +802,6 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
         ch.getHVals(search_engines[i]->my_heuristic);
     }
 
-    // initialize allNodes_table (hash table)
-    //empty_node = new GICBSNode();
-
-    //empty_node->time_generated = -2; empty_node->agent_id = -2;
-    //deleted_node = new GICBSNode();
-    //deleted_node->time_generated = -3; deleted_node->agent_id = -3;
-    //allNodes_table.set_empty_key(empty_node);
-    //allNodes_table.set_deleted_key(deleted_node);
-
-
     dummy_start = new GICBSNode();
     dummy_start->agent_id = -1;
 
