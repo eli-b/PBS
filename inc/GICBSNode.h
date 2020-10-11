@@ -78,7 +78,7 @@ public:
         }
     };  // used by OPEN to compare nodes by sum_min_f_vals (top of the heap has min sum_min_f_vals)
 
-    // the following is used to comapre nodes in the FOCAL list
+    // the following is used to compare nodes in the FOCAL list
     /*
     struct secondary_compare_node {
         bool operator()(const GICBSNode* n1, const GICBSNode* n2) const {

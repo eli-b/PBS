@@ -113,7 +113,7 @@ public:
     };
 
     // The following is used by googledensehash for generating the hash value of a nodes
-    // /* TODO:  */his is needed because otherwise we'll have to define the specilized template inside std namespace
+    // /* TODO:  */This is needed because otherwise we'll have to define the specialized template inside std namespace
     struct NodeHasher
     {
         std::size_t operator()(const LLNode* n) const

@@ -316,7 +316,7 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
 
     t1 = std::clock();
 
-    if (get<3>(node->constraint)) //positve constraint
+    if (get<3>(node->constraint)) //positive constraint
     {
         for (int ag = 0; ag < num_of_agents; ag++)
         {
