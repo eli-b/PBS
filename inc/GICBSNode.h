@@ -56,7 +56,7 @@ public:
     {
         bool operator()(const GICBSNode* n1, const GICBSNode* n2) const
         {
-            return n1->depth <= n2->depth;
+            return n1->depth <= n2->depth;  // This is a max heap, so this means we prefer HIGHER depth nodes come out of the heap FIRST.
             if (n1->depth == n2->depth)
             {
                 if (n1->f_val == n2->f_val)
@@ -123,6 +123,7 @@ public:
     int agent_id;
     //std::shared_ptr<tuple<int, int, int, bool>> constraint; // <int loc1, int loc2, int timestep, bool positive_constraint> NOTE loc2 = -1 for vertex constraint; loc2 = loation2 for Edge Constraint
     tuple<int, int, int, bool> constraint; // <int loc1, int loc2, int timestep, bool positive_constraint> NOTE loc2 = -1 for vertex constraint; loc2 = loation2 for Edge Constraint
+                                           // Currently we only generate negative constraints
     //vector<list<std::shared_ptr<tuple<int, int, int, bool>>>> constraints;
 
     list<pair<int, vector<PathEntry>>> new_paths;

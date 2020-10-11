@@ -21,7 +21,7 @@ public:
     double runtime_updatecons;
     list<tuple<int, int, int, int, int, int, int>> node_stat;
     //double upper_bound;
-    typedef boost::heap::pairing_heap<GICBSNode*, boost::heap::compare<GICBSNode::compare_node>> heap_open_t;
+    typedef boost::heap::pairing_heap<GICBSNode*, boost::heap::compare<GICBSNode::compare_node>> heap_open_t;  // Note the heap only gives preference to higher depth, making it not a heap but a kind of stack
     //typedef boost::heap::fibonacci_heap< GICBSNode*, boost::heap::compare<GICBSNode::secondary_compare_node> > heap_focal_t;
     //typedef boost::heap::fibonacci_heap< MDDNode*, boost::heap::compare<MDDNode::compare_node> > mdd_open_t;
     //typedef dense_hash_map<GICBSNode*, GICBSNode*, GICBSNode::GICBSNodeHasher, GICBSNode::ecbs_eqnode> hashtable_t;
