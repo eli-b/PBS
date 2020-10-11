@@ -45,8 +45,7 @@ void GICBSSearch::findConflicts(GICBSNode& curr)
                 int loc2 = paths[a2]->at(timestep).location;
                 if (loc1 == loc2)
                 {
-                    curr.conflict = std::shared_ptr<tuple<int, int, int, int, int>>(
-                            new tuple<int, int, int, int, int>(a1, a2, loc1, -1, timestep));
+                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1, a2, loc1, -1, timestep);
                     return;
                     //hasConflicts[a1] = true;
                     //hasConflicts[a2] = true;
@@ -55,8 +54,7 @@ void GICBSSearch::findConflicts(GICBSNode& curr)
                          && loc1 == paths[a2]->at(timestep + 1).location
                          && loc2 == paths[a1]->at(timestep + 1).location)
                 {
-                    curr.conflict = std::shared_ptr<tuple<int, int, int, int, int>>(
-                            new tuple<int, int, int, int, int>(a1, a2, loc1, loc2, timestep + 1));
+                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1, a2, loc1, loc2, timestep + 1);
                     //hasConflicts[a1] = true;
                     //hasConflicts[a2] = true;
                     return;
@@ -72,9 +70,7 @@ void GICBSSearch::findConflicts(GICBSNode& curr)
                     int loc2 = paths[a2_]->at(timestep).location;
                     if (loc1 == loc2)
                     {
-                        curr.conflict = std::shared_ptr<tuple<int, int, int, int, int>>(
-                                new tuple<int, int, int, int, int>(a1_, a2_, loc1, -1,
-                                                                   timestep)); // It's at least a semi conflict
+                        curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1_, a2_, loc1, -1, timestep); // It's at least a semi conflict
                         //curr.unknownConf.front()->cost1 = timestep + 1;
                         //hasConflicts[a1] = true;
                         //hasConflicts[a2] = true;
