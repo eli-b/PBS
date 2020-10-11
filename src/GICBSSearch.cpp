@@ -536,7 +536,7 @@ bool GICBSSearch::runGICBSSearch()
         runtime_conflictdetection += std::clock() - t1;
 
 
-        if (curr->conflict == NULL) //Fail to find a conflict => no conflicts
+        if (curr->conflict == NULL) // Fail to find a conflict => no conflicts
         {  // found a solution (and finish the while look)
             runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
             solution_found = true;
