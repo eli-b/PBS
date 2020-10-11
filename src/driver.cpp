@@ -92,7 +92,9 @@ int main(int argc, char** argv)
         addHeads << "runtime,#high-level expanded,#high-level generated,#low-level expanded,#low-level generated," <<
                  "solution cost," <<
                  "#pathfinding," <<
-                 "preprocessing runtime,solver name,instance name,#agents" << endl;
+                 "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime,"
+                 "updatecons runtime,updatepaths runtime," <<
+                 "orig agent failed,another agent failed,solver name,instance name,#agents" << endl;
         addHeads.close();
     }
     ofstream stats;
@@ -101,8 +103,12 @@ int main(int argc, char** argv)
           icbs.HL_num_expanded << "," << icbs.HL_num_generated << "," <<
           icbs.LL_num_expanded << "," << icbs.LL_num_generated << "," <<
           icbs.solution_cost << "," << icbs.num_single_pathfinding << "," <<
-          icbs.pre_runtime / CLOCKS_PER_SEC << ",PBS," <<
-          vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << endl;
+          icbs.pre_runtime / CLOCKS_PER_SEC << "," << icbs.runtime_computeh / CLOCKS_PER_SEC << "," <<
+          icbs.runtime_conflictdetection / CLOCKS_PER_SEC << "," << icbs.runtime_listoperation / CLOCKS_PER_SEC << "," <<
+          icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_updatecons / CLOCKS_PER_SEC << "," <<
+          icbs.runtime_updatepaths / CLOCKS_PER_SEC << "," <<
+          icbs.agent_itself_failed << "," << icbs.lower_priority_agent_failed <<
+          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << endl;
     stats.close();
 
     if (res)

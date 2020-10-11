@@ -19,6 +19,8 @@ public:
     double runtime_listoperation;
     double runtime_updatepaths;
     double runtime_updatecons;
+    uint64_t agent_itself_failed = 0;
+    uint64_t lower_priority_agent_failed = 0;
     list<tuple<int, int, int, int, int, int, int>> node_stat;
     //double upper_bound;
     typedef boost::heap::pairing_heap<GICBSNode*, boost::heap::compare<GICBSNode::compare_node>> heap_open_t;  // Note the heap only gives preference to higher depth, making it not a heap but a kind of stack

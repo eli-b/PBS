@@ -284,6 +284,10 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         }
         else
         {
+            if (curr_agent == node->agent_id)
+                ++agent_itself_failed;
+            else
+                ++lower_priority_agent_failed;
             return false;
         }
     }
