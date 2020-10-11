@@ -379,7 +379,7 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     node->open_handle = open_list.push(node);
     HL_num_generated++;
     node->time_generated = HL_num_generated;
-    allNodes_table.push_back(node);
+    allNodes_table.emplace_back(node);
 
     // Copy single vector from parent
     /*node->single.resize(num_of_agents);
@@ -948,8 +948,9 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
         //dummy_start->constraints.resize(num_of_agents);
         HL_num_generated++;
         dummy_start->time_generated = HL_num_generated;
-        allNodes_table.push_back(dummy_start);
-        findConflicts(*dummy_start);
+        allNodes_table.emplace_back(dummy_start);
+        findConflicts(*dummy_start);  // TODO: Should we add the time this takes to runtime_conflictdetection?
+                                         //       It would mean it would slightly overlap with pre_runtime.
         //initial_g_val = dummy_start->g_val;
         min_f_val = dummy_start->f_val;
         focal_list_threshold = min_f_val * focal_w;
@@ -960,12 +961,6 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
     }
 
     pre_runtime = std::clock() - start_t;
-}
-
-inline void GICBSSearch::releaseClosedListNodes()
-{
-    for (list<GICBSNode*>::iterator it = allNodes_table.begin(); it != allNodes_table.end(); it++)
-        delete *it;
 }
 
 inline void GICBSSearch::releaseOpenListNodes()
@@ -986,7 +981,6 @@ GICBSSearch::~GICBSSearch()
     //	delete (paths_found_initially[i]);
     //  for (size_t i=0; i<paths.size(); i++)
     //    delete (paths[i]);
-    releaseClosedListNodes();
     // releaseOpenListNodes();
     //delete (empty_node);
     //delete (deleted_node);

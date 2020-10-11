@@ -106,7 +106,7 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
     start->open_handle = open_list.push(start);
     start->focal_handle = focal_list.push(start);
     start->in_openlist = true;
-    allNodes_table[start] = start;
+    allNodes_table[start] = std::unique_ptr<LLNode>(start);
     min_f_val = start->getFVal();
     lower_bound = max(lowerbound, f_weight * min_f_val);
 
@@ -154,7 +154,6 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
             if (is_goal)
             {
                 updatePath(curr, path);
-                releaseClosedListNodes(&allNodes_table);
                 open_list.clear();
                 focal_list.clear();
                 allNodes_table.clear();
@@ -216,13 +215,13 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
                         num_generated++;
                         if (next->getFVal() <= lower_bound)
                             next->focal_handle = focal_list.push(next);
-                        allNodes_table[next] = next;
+                        allNodes_table[next] = std::unique_ptr<LLNode>(next);
                     }
                     else
                     {  // update existing node's g, h, and other details if needed (only if it's still in the open_list)
                         delete (next);  // not needed anymore -- we already generated it before
-                        LLNode* existing_next = (*it).second;
-                        //          cout << "Actually next exists. It's address is " << existing_next << endl;
+                        LLNode* existing_next = (*it).second.get();
+                        //          cout << "Actually next exists. Its address is " << existing_next << endl;
                         if (existing_next->in_openlist == true)
                         {  // if it's in the open list
                             if (existing_next->getFVal() > next_g_val + next_h_val ||
@@ -323,20 +322,10 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
     }  // end while loop
     // no path found
     //path.clear();
-    releaseClosedListNodes(&allNodes_table);
     open_list.clear();
     focal_list.clear();
     allNodes_table.clear();
     return false;
-}
-
-inline void SingleAgentICBS::releaseClosedListNodes(hashtable_t* allNodes_table)
-{
-    hashtable_t::iterator it;
-    for (it = allNodes_table->begin(); it != allNodes_table->end(); it++)
-    {
-        delete ((*it).second);  // Node* s = (*it).first; delete (s);
-    }
 }
 
 SingleAgentICBS::SingleAgentICBS(int id, int start_location, int goal_location,
