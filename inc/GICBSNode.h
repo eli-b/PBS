@@ -61,7 +61,7 @@ public:
             {
                 if (n1->f_val == n2->f_val)
                 {
-                    if (n1->num_of_collisions == n2->num_of_collisions)
+                    if (n1->num_of_colliding_pairs == n2->num_of_colliding_pairs)
                     {
                         if (n1->g_val == n2->g_val)
                         {
@@ -70,7 +70,7 @@ public:
                         }
                         return n1->g_val <= n2->g_val;  // break ties towards larger g_val
                     }
-                    return n1->num_of_collisions >= n2->num_of_collisions;
+                    return n1->num_of_colliding_pairs >= n2->num_of_colliding_pairs;
                 }
                 return n1->f_val >= n2->f_val;
             }
@@ -82,7 +82,7 @@ public:
     /*
     struct secondary_compare_node {
         bool operator()(const GICBSNode* n1, const GICBSNode* n2) const {
-            if (n1->num_of_collisions == n2->num_of_collisions)
+            if (n1->num_of_colliding_pairs == n2->num_of_colliding_pairs)
             {
                 if (n1->depth == n2->depth)
                 {
@@ -94,7 +94,7 @@ public:
             }
             return n1->f_val >= n2->f_val;
         }
-    }; */ // used by FOCAL to compare nodes by num_of_collisions (top of the heap has min h-val)
+    }; */ // used by FOCAL to compare nodes by num_of_colliding_pairs (top of the heap has min h-val)
 
     typedef boost::heap::pairing_heap<GICBSNode*, compare<GICBSNode::compare_node>>::handle_type open_handle_t;
     // typedef boost::heap::fibonacci_heap< GICBSNode*, compare<GICBSNode::compare_node> >::handle_type open_handle_t;
@@ -133,7 +133,7 @@ public:
     int f_val;
     size_t depth;
     size_t makespan;
-    int num_of_collisions;
+    int num_of_colliding_pairs;
 
     uint64_t time_expanded;
     uint64_t time_generated;
@@ -147,8 +147,8 @@ public:
     //bool findPathByMDD(bool* res_table);
 
     //GICBSNode();
-    //GICBSNode(int agent_id, int numAgents, double g_val, double num_of_collisions, int time_expanded, double sum_min_f_vals);
-    //GICBSNode(int agent_id, GICBSNode* parent, double g_val, double num_of_collisions, int time_expanded, double sum_min_f_vals);
+    //GICBSNode(int agent_id, int numAgents, double g_val, double num_of_colliding_pairs, int time_expanded, double sum_min_f_vals);
+    //GICBSNode(int agent_id, GICBSNode* parent, double g_val, double num_of_colliding_pairs, int time_expanded, double sum_min_f_vals);
     void clear();
     //~GICBSNode();
 };

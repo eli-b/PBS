@@ -9,17 +9,17 @@
 //	h_val = 0;
 //	f_val = 0;
 //	conflict = NULL; //make_tuple(0,0,0,0,-1);
-//	num_of_collisions = 0;
+//	num_of_colliding_pairs = 0;
 //	time_expanded = -1;
 //}
 
-//GICBSNode::GICBSNode(int agent_id, int numAgents, double g_val, double num_of_collisions, int time_expanded, double sum_min_f_vals)
+//GICBSNode::GICBSNode(int agent_id, int numAgents, double g_val, double num_of_colliding_pairs, int time_expanded, double sum_min_f_vals)
 //{
 //	this->agent_id = agent_id;
 //	this->g_val = g_val;
 //	this->h_val = 0;
 //	conflict = NULL; //make_tuple(0,0,0,0,-1);
-//	this->num_of_collisions = num_of_collisions;
+//	this->num_of_colliding_pairs = num_of_colliding_pairs;
 //	this->time_expanded = time_expanded;
 //	this->sum_min_f_vals = sum_min_f_vals;
 //	//this->cardinal.resize(numAgents);
@@ -51,14 +51,14 @@ void GICBSNode::clear()
 
     //agents_updated.clear();
 }
-/*GICBSNode::GICBSNode(int agent_id, GICBSNode* parent, double g_val, double num_of_collisions, int time_expanded, double sum_min_f_vals)
+/*GICBSNode::GICBSNode(int agent_id, GICBSNode* parent, double g_val, double num_of_colliding_pairs, int time_expanded, double sum_min_f_vals)
 	:parent(parent)
 {
 	this->agent_id = agent_id;
 	this->g_val = g_val;
 	this->h_val = 0;
 	conflict = make_tuple(0,0,0,0,-1);
-	this->num_of_collisions = num_of_collisions;
+	this->num_of_colliding_pairs = num_of_colliding_pairs;
 	this->time_expanded = time_expanded;
 	this->sum_min_f_vals = sum_min_f_vals;
 	cardinal.resize(parent->cardinal.size());
