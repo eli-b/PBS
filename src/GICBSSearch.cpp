@@ -153,6 +153,7 @@ inline int GICBSSearch::getAgentLocation(int agent_id, size_t timestep)
 }
 
 
+// May absolutely find new paths for multiple agents!
 bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbound)
 {
     // extract all constraints on agent ag
@@ -251,7 +252,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         //vector<PathEntry> newPath;
         //newPath.first = curr_agent;
         //foundSol = search_engines[curr_agent]->findPath(newPath.second, focal_w, node->trans_priorities, paths, max_plan_len, lowerbound);
-        num_single_pathfinding += 1;
+        num_single_pathfinding++;
 
         auto t1 = std::clock();
         //findConflicts(*node);
@@ -856,6 +857,7 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
             for (int i = 0; i < num_of_agents; i++)
             {
                 int a = ordering[i];
+                num_single_pathfinding++;
                 if (!search_engines[a]->findPath(paths_found_initially[a], f_w, dummy_start->trans_priorities, paths,
                                                  dummy_start->makespan + 1, 0))
                 {
@@ -892,6 +894,7 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
             //updateReservationTable(res_table, res_table_low_prio, i, *dummy_start);
             //cout << "*** CALCULATING INIT PATH FOR AGENT " << i << ". Reservation Table[MAP_SIZE x MAX_PLAN_LEN]: " << endl;
             //printResTable(res_table, max_plan_len);
+            num_single_pathfinding++;
             if (!search_engines[i]->findPath(paths_found_initially[i], f_w, dummy_start->trans_priorities, paths,
                                              dummy_start->makespan + 1, 0))
             {

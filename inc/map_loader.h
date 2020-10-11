@@ -27,7 +27,7 @@ public:
 
     enum valid_moves_t
     {
-        NORTH, EAST, SOUTH, WEST, WAIT_MOVE, INVALID, MOVE_COUNT
+        NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT
     };  // MOVE_COUNT is the enum's size
     int* moves_offset;
 
