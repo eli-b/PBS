@@ -32,245 +32,49 @@ void SingleAgentICBS::updatePath(const LLNode* goal, vector<PathEntry>& path)
 }
 
 
-// iterate over the constraints ( cons[t] is a list of all constraints for timestep t) and return the latest
-// timestep which has a constraint involving the goal location
-int SingleAgentICBS::extractLastGoalTimestep(int goal_location, const vector<vector<bool>>& priorities,
-                                             const vector<vector<PathEntry>*>& current_paths)
-{
-    int retVal = -1;
-    for (int ag = 0; ag < current_paths.size(); ag++)
-    {
-        if (ag != agent_id && current_paths[ag] != NULL && priorities[ag][agent_id])
-        {
-            int last_time = current_paths[ag]->size() - 1;
-            if (retVal < last_time)
-            {
-                retVal = last_time;
-            }
-        }
-    }
-    return retVal;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// input: curr_id (location at time next_timestep-1) ; next_id (location at time next_timestep); next_timestep
-//        cons[timestep] is a list of <loc1,loc2> of (vertex/edge) constraints for that timestep.
-
-inline bool
-SingleAgentICBS::isConstrained(int curr_id, int next_id, int next_timestep, const vector<vector<int>>* cons_table)
+// priorities are the transitive priorities here!
+// Returns three CATs in descending order of avoidance priority. The first contains moves of higher priority agents -
+// must never collide with them! The second is for agents whose priority ordering with this->agent_id is not set,
+// and the third is for agents with lower priority than this->agent_id.
+std::tuple<ConflictAvoidanceTable, ConflictAvoidanceTable, ConflictAvoidanceTable>
+SingleAgentICBS::buildConflictAvoidanceTables(const vector<vector<bool>>& priorities, const vector<vector<PathEntry>*>& current_paths)
 {
-    if (cons_table->size() == 0)
-    {
-        return false;
-    }
-    if (next_timestep >= cons_table->size())
-    {
-        return cons_table->at(cons_table->size() - 1)[next_id] > 0;
-    }
-    else
-    {
+    ConflictAvoidanceTable cat_higher_priority(this->moves_offset, this->map_size);
+    ConflictAvoidanceTable cat_unset_priority(this->moves_offset, this->map_size);
+    ConflictAvoidanceTable cat_lower_priority(this->moves_offset, this->map_size);
 
-        if (cons_table->at(next_timestep)[next_id] > 0)
+    for (int ag = 0; ag < (int) current_paths.size(); ag++)
+    {
+        if (ag != agent_id && current_paths[ag] != nullptr)
         {
-            // node conflict
-            return true;
-        }
-        if (((cons_table->at(next_timestep - 1)[next_id]) & (1 << offset2action(curr_id - next_id, moves_offset))) > 0)
-        {
-            // edge conflict
-            return true;
-        }
-    }
-    return false;
-
-}
-
-
-inline bool
-SingleAgentICBS::isConstrained(int curr_id, int next_id, int next_timestep, const vector<vector<bool>>& priorities,
-                               const vector<vector<PathEntry>*>& current_paths) const
-{
-    for (int ag = 0; ag < current_paths.size(); ag++)
-    {
-        if (ag != agent_id && current_paths[ag] != NULL && priorities[ag][agent_id])
-        { // check only high prior agents
-            if (next_timestep >= current_paths[ag]->size())
-            {
-                if (current_paths[ag]->back().location == next_id)
-                { //vertex constraint
-                    return true;
-                }
-            }
-            else
-            {
-                if (current_paths[ag]->at(next_timestep).location == next_id //vertex constraint
-                    || (current_paths[ag]->at(next_timestep).location == curr_id &&
-                        current_paths[ag]->at(next_timestep - 1).location == next_id))
-                { // edge constraint
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-vector<vector<int>>* SingleAgentICBS::collectConstraints(const vector<vector<bool>>& priorities,
-                                                         const vector<vector<PathEntry>*>& current_paths)
-{
-    int max_len = 0;
-    for (int ag = 0; ag < current_paths.size(); ag++)
-    {
-        if (ag != agent_id && current_paths[ag] != NULL && priorities[ag][agent_id])
-        { // check only high prior agents
-            max_len = std::max(max_len, (int) current_paths[ag]->size());
-        }
-    }
-
-    vector<vector<int>>* cons_table = new vector<vector<int>>(max_len, vector<int>(map_size, 0));
-
-    for (int ag = 0; ag < current_paths.size(); ag++)
-    {
-        if (ag != agent_id && current_paths[ag] != NULL && priorities[ag][agent_id])
-        { // check only high prior agents
-            for (int i = 0; i < max_len; i++)
-            {
-                if (i + 1 < current_paths[ag]->size())
-                {
-                    int action = offset2action(
-                            current_paths[ag]->at(i + 1).location - current_paths[ag]->at(i).location, moves_offset);
-                    (*cons_table)[i][current_paths[ag]->at(i).location] =
-                            (*cons_table)[i][current_paths[ag]->at(i).location] | (1 << action);
-                }
+            // Sometimes agents are forced to find a longer path than necessary, find the first time step from which all
+            // actions are WAIT
+            int first_wait_at_goal_timestep = current_paths[ag]->size();
+            for (int j = current_paths[ag]->size() - 2; j >= 0 ; --j) {
+                if (current_paths[ag]->at(j).location == current_paths[ag]->at(j + 1).location)
+                    --first_wait_at_goal_timestep;
                 else
-                {
-                    int l = current_paths[ag]->size() - 1;
-                    (*cons_table)[i][current_paths[ag]->at(l).location] =
-                            (*cons_table)[i][current_paths[ag]->at(l).location] |
-                            (1 << MapLoader::valid_moves_t::WAIT_MOVE);
-                }
+                    break;
             }
-        }
-    }
-    return cons_table;
-}
-
-const int N_CONF_TABLE_OFFSET = 1000;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-vector<vector<int>>*
-SingleAgentICBS::countConflict(const vector<vector<bool>>& priorities, const vector<vector<PathEntry>*>& current_paths)
-{
-    int max_len = 0;
-    for (int ag = 0; ag < current_paths.size(); ag++)
-    {
-        // if (ag != agent_id && current_paths[ag] != NULL && !priorities[ag][agent_id] && !colliding_agents[ag]){
-        if (ag != agent_id && current_paths[ag] != NULL && !priorities[ag][agent_id])
-        {
-            max_len = std::max(max_len, (int) current_paths[ag]->size());
-        }
-    }
-    vector<vector<int>>* cons_table = new vector<vector<int>>(max_len, vector<int>(map_size, 0));
-
-    for (int ag = 0; ag < current_paths.size(); ag++)
-    {
-        if (ag != agent_id && current_paths[ag] != NULL && !priorities[ag][agent_id])
-        {
-            // if (ag != agent_id && current_paths[ag] != NULL && !priorities[ag][agent_id] && !colliding_agents[ag]){
-            for (int i = 0; i < max_len; i++)
-            {
-                int l = i;
-                if (i >= current_paths[ag]->size())
-                {
-                    l = current_paths[ag]->size() - 1;
-                }
-
-                if (priorities[agent_id][ag])
-                {
-                    // Low Prior
-                    (*cons_table)[i][current_paths[ag]->at(l).location] += 1;
-                }
+            ConflictAvoidanceTable* cat;
+            if (priorities[ag][agent_id])
+                cat = &cat_higher_priority;
+            else {
+                if (priorities[agent_id][ag])  // The other agent is of lower priority
+                    cat = &cat_lower_priority;
                 else
-                {
-                    (*cons_table)[i][current_paths[ag]->at(l).location] += N_CONF_TABLE_OFFSET;
-                }
+                    cat = &cat_unset_priority;
             }
+
+            for (int i = 1; i < first_wait_at_goal_timestep; i++)
+            {
+                cat->add_action(i, current_paths[ag]->at(i - 1).location, current_paths[ag]->at(i).location);
+            }
+            cat->add_wait_at_goal(current_paths[ag]->size(), current_paths[ag]->back().location);
         }
     }
-    return cons_table;
-}
-
-pair<int, int> SingleAgentICBS::numOfConflictsForStep(int curr_id, int next_id, int next_timestep,
-                                                      const vector<vector<int>>* cons_table)
-{
-    if (cons_table->size() == 0)
-    {
-        return { 0, 0 };
-    }
-    int t = next_timestep;
-    if (next_timestep >= cons_table->size())
-    {
-        t = cons_table->size() - 1;
-    }
-    int cnt = cons_table->at(t)[next_id];
-
-    return { cnt / N_CONF_TABLE_OFFSET, cnt % N_CONF_TABLE_OFFSET };
-}
-
-pair<int, int> SingleAgentICBS::numOfConflictsForStep(int curr_id, int next_id, int next_timestep,
-                                                      const vector<vector<bool>>& priorities,
-                                                      const vector<vector<PathEntry>*>& current_paths,
-                                                      vector<bool>& colliding_agents)
-{
-    int retVal = 0;
-    int retVal_lowPrior = 0;
-    for (int ag = 0; ag < current_paths.size(); ag++)
-    {
-        if (ag != agent_id && current_paths[ag] != NULL && !priorities[ag][agent_id] && !colliding_agents[ag])
-        { // higher prior ag is hard constraints (not soft)
-            if (next_timestep >= current_paths[ag]->size())
-            {
-                // check vertex constraints (being at an agent's goal when he stays there because he is done planning)
-                if (current_paths[ag]->back().location == next_id)
-                {
-                    colliding_agents[ag] = true;
-                    if (priorities[agent_id][ag])
-                    { // low prior ag
-                        retVal_lowPrior++;
-                    }
-                    else
-                    {
-                        retVal++;
-                    }
-                    continue;
-                }
-                // Note -- there cannot be edge conflicts when other agents are done moving
-            }
-            else
-            {
-                // check vertex constraints (being in next_id at next_timestep is disallowed)
-                if (current_paths[ag]->at(next_timestep).location == next_id //vertex constraint
-                    || (current_paths[ag]->at(next_timestep).location == curr_id &&
-                        current_paths[ag]->at(next_timestep - 1).location == next_id))
-                { // edge constraint
-                    colliding_agents[ag] = true;
-                    if (priorities[agent_id][ag])
-                    { // low prior ag
-                        retVal_lowPrior++;
-                    }
-                    else
-                    {
-                        retVal++;
-                    }
-                    continue;
-                }
-            }
-        }
-    }
-    //  cout << "#CONF=" << retVal << " ; For: curr_id=" << curr_id << " , next_id=" << next_id << " , next_timestep=" << next_timestep
-    //       << " , max_plan_len=" << max_plan_len << endl;
-    return pair<int, int>(retVal, retVal_lowPrior);
+    return std::make_tuple(std::move(cat_higher_priority), std::move(cat_unset_priority), std::move(cat_lower_priority));
 }
 
 // $$$ -- is there a more efficient way to do that?
@@ -288,11 +92,7 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
     // (note -- nodes are deleted before findPath returns)
 
     // vector<bool> next_colliding_agents = vector<bool>(curr->colliding_agents);
-    std::unique_ptr<vector<vector<int> >> cons_table = std::unique_ptr<vector<vector<int> >>(
-            collectConstraints(priorities, current_paths));
-    std::unique_ptr<vector<vector<int> >> conf_cnt_table = std::unique_ptr<vector<vector<int> >>(
-            countConflict(priorities, current_paths));
-
+    auto [cat_higher_priority, cat_unset_priority, cat_lower_priority] = buildConflictAvoidanceTables(priorities, current_paths);
 
     num_expanded = 0;
     num_generated = 0;
@@ -310,7 +110,9 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
     min_f_val = start->getFVal();
     lower_bound = max(lowerbound, f_weight * min_f_val);
 
-    int lastGoalConsTime = extractLastGoalTimestep(goal_location, priorities, current_paths);
+    int lastGoalConsTime = cat_higher_priority.latest_vertex_entry(goal_location);
+    int timeLastConstraintAvoidableWithWait = cat_higher_priority.latest_entry() - 1;  // Note locations _can_ be blocked after this time if they
+                                                                                       // are blocked forever, but waiting won't help avoid them
 
 #ifdef  _DEBUG
     if (agent_id == 0 || agent_id == 7) {
@@ -328,6 +130,11 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
 
     while (!focal_list.empty())
     {
+        // DO NOT CHECK FOR A TIMEOUT HERE!!
+        // THIS LOW-LEVEL SEARCH IS SUPPOSED TO BE ABLE TO TERMINATE IN (relatively short) FINITE TIME BECAUSE THE MAP
+        // IS FINITE. IF YOUR RUNS GET STUCK RUNNING FOREVER HERE, CHECK THAT THE "SUPER IMPORTANT" TRICK BELOW WAS NOT
+        // TEMPERED WITH.
+
         //    cout << "|F|=" << focal_list.size() << " ; |O|=" << open_list.size() << endl;
         LLNode* curr = focal_list.top();
         focal_list.pop();
@@ -342,14 +149,8 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
         if (curr->loc == goal_location)
         {
             bool is_goal = true;
-            for (int t = curr->g_val; t < lastGoalConsTime; t++)
-            {
-                if (isConstrained(goal_location, goal_location, t + 1, cons_table.get()))
-                {
-                    is_goal = false;
-                    break;
-                }
-            }
+            if (curr->g_val < lastGoalConsTime)
+                is_goal = false;
             if (is_goal)
             {
                 updatePath(curr, path);
@@ -362,24 +163,22 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
         }
 
         int next_id;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < MapLoader::MOVE_COUNT; i++)
         {
-            if (curr->timestep == lastGoalConsTime && i == 4)
+            if (curr->timestep >= timeLastConstraintAvoidableWithWait && i == MapLoader::WAIT_MOVE)
             { // no reason to wait
                 continue;
             }
 
             next_id = curr->loc + moves_offset[i];
 
-            int next_timestep;
-            if (curr->timestep == lastGoalConsTime)
-            {
-                next_timestep = curr->timestep;
-            }
-            else
-            {
-                next_timestep = curr->timestep + 1;
-            }
+            int next_timestep = curr->timestep + 1;;
+            if (curr->timestep == timeLastConstraintAvoidableWithWait)
+                next_timestep = curr->timestep;  // Super important! A node's identity is derived from its location and
+                                                 // its time step, but NOT from its g-value. This allows us to exhaust
+                                                 // the open list once we pass the last avoidable constraint. Otherwise
+                                                 // we would be able to move back and forth between two locations forever
+                                                 // if the agent is blocked by a higher priority agent waiting at its goal.
             int next_g_val = curr->g_val + 1;
 
             if (0 <= next_id && next_id < map_size && abs(next_id % moves_offset[MapLoader::valid_moves_t::SOUTH] -
@@ -393,23 +192,16 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
                 //int col = next_id % num_col;
 
                 // bool is_cons_0 = isConstrained(curr->loc, next_id, next_g_val, priorities, current_paths);
-                bool is_cons_1 = isConstrained(curr->loc, next_id, next_g_val, cons_table.get());
-
-                int next_h_val = my_heuristic[next_id];
-                if (!my_map[next_id] && !is_cons_1)
+                int next_h_val = my_heuristic[next_id];  // Can be deferred to inside the if below, but helps debugging
+                bool is_blocked = my_map[next_id];
+                bool is_constrained = is_blocked || (cat_higher_priority.num_conflicts_for_step(curr->loc, next_id, next_g_val) > 0);
+                if (!is_blocked && !is_constrained)
                 {
-                    // compute cost to next_id via curr node
-
-
-
-                    // pair<int, int> next_internal_conflicts_pair = numOfConflictsForStep(curr->loc, next_id, next_g_val, priorities, current_paths, next_colliding_agents);
-                    pair<int, int> next_internal_conflicts_pair = numOfConflictsForStep(curr->loc, next_id, next_g_val,
-                                                                                        conf_cnt_table.get());
                     // generate (maybe temporary) node
-                    int next_internal_conflicts = curr->num_internal_conf + next_internal_conflicts_pair.first;
-                    int next_internal_conflicts_lp = curr->num_internal_conf_lp + next_internal_conflicts_pair.second;
-                    LLNode* next = new LLNode(next_id, next_g_val, next_h_val, curr, next_timestep,
-                                              next_internal_conflicts, next_internal_conflicts_lp, false);
+                    int next_internal_conflicts = curr->num_internal_conf + cat_unset_priority.num_conflicts_for_step(curr->loc, next_id, next_g_val);
+                    int next_internal_conflicts_lp = curr->num_internal_conf_lp + cat_lower_priority.num_conflicts_for_step(curr->loc, next_id, next_g_val);
+                    auto next = new LLNode(next_id, next_g_val, next_h_val, curr, next_timestep,
+                                           next_internal_conflicts, next_internal_conflicts_lp, false);
 
                     // next->colliding_agents = next_colliding_agents;
                     // cout << "   NEXT(" << next << ")=" << *next << endl;
@@ -427,12 +219,12 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
                         allNodes_table[next] = next;
                     }
                     else
-                    {  // update existing node's if needed (only in the open_list)
+                    {  // update existing node's g, h, and other details if needed (only if it's still in the open_list)
                         delete (next);  // not needed anymore -- we already generated it before
                         LLNode* existing_next = (*it).second;
                         //          cout << "Actually next exists. It's address is " << existing_next << endl;
                         if (existing_next->in_openlist == true)
-                        {  // if its in the open list
+                        {  // if it's in the open list
                             if (existing_next->getFVal() > next_g_val + next_h_val ||
                                 (existing_next->getFVal() == next_g_val + next_h_val &&
                                  existing_next->num_internal_conf > next_internal_conflicts) ||

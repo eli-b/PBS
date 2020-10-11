@@ -6,12 +6,16 @@
 #include <vector>
 #include <list>
 #include <utility>
+#include <tuple>
+#include <unordered_map>
+#include <memory>  // For unique_ptr
 
 #include "LLNode.h"
 #include "egraph_reader.h"
 #include "map_loader.h"
 // #include <boost/heap/fibonacci_heap.hpp>
 #include <boost/heap/pairing_heap.hpp>
+#include "conflict_avoidance_table.h"
 
 
 class SingleAgentICBS
@@ -74,44 +78,15 @@ public:
     //std::shared_ptr<vector<PathEntry>> getPath() { return path; }  // return a pointer to the path found;
 
 
-    /* returns the minimal plan length for the agent (that is, extract the latest timestep which
-    has a constraint invloving this agent's goal location).
-    */
-    int extractLastGoalTimestep(int goal_location, const vector<vector<bool>>& priorities,
-                                const vector<vector<PathEntry>*>& cuurrent_paths);
-
-    /* Checks if a vaild path found (wrt my_map and constraints)
-    Note -- constraint[timestep] is a list of pairs. Each pair is a disallowed <loc1,loc2> (loc2=-1 for vertex constraint).
-    Returns true/false.
-    */
-
-
-    vector<vector<int>>*
-    collectConstraints(const vector<vector<bool>>& priorities, const vector<vector<PathEntry>*>& current_paths);
-
-    inline bool isConstrained(int curr_id, int next_id, int next_timestep, const vector<vector<int>>* cons_table);
-
-    inline bool isConstrained(int curr_id, int next_id, int next_timestep, const vector<vector<bool>>& priorities,
-                              const vector<vector<PathEntry>*>& current_paths) const;
-
     /* Updates the path datamember (vector<int>).
     After update it will contain the sequence of locations found from the goal to the start.
     */
     void updatePath(const LLNode* goal, vector<PathEntry>& path);  // $$$ make inline?
 
     /* Return the number of conflicts between the known_paths' (by looking at the reservation table) for the move [curr_id,next_id].
-    Returns 0 if no conflict, 1 for vertex or edge conflict, 2 for both.
     */
-
-    vector<vector<int>>*
-    countConflict(const vector<vector<bool>>& priorities, const vector<vector<PathEntry>*>& current_paths);
-
-    pair<int, int>
-    numOfConflictsForStep(int curr_id, int next_id, int next_timestep, const vector<vector<int>>* cons_table);
-
-    pair<int, int>
-    numOfConflictsForStep(int curr_id, int next_id, int next_timestep, const vector<vector<bool>>& priorities,
-                          const vector<vector<PathEntry>*>& current_paths, vector<bool>& colliding_agents);
+    std::tuple<ConflictAvoidanceTable, ConflictAvoidanceTable, ConflictAvoidanceTable>
+    buildConflictAvoidanceTables(const vector<vector<bool>>& priorities, const vector<vector<PathEntry>*>& current_paths);
 
     /* Iterate over OPEN and adds to FOCAL all nodes with: 1) f-val > old_min_f_val ; and 2) f-val * f_weight < new_lower_bound.
     */
