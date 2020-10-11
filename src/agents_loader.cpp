@@ -114,7 +114,6 @@ AgentsLoader::AgentsLoader(string fname, const MapLoader& ml, int agentsNum = 0)
 
                 // random walk
                 int loc = start;
-                bool* temp_map = new bool[ml.rows * ml.cols];
                 for (int walk = 0; walk < RANDOM_WALK_STEPS; walk++)
                 {
                     int directions[] = { 0, 1, 2, 3, 4 };

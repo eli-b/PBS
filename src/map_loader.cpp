@@ -97,7 +97,6 @@ MapLoader::MapLoader(string fname)
         myfile.close();
 
         // initialize moves_offset array
-        moves_offset = new int[5];
         moves_offset = new int[MapLoader::MOVE_COUNT];
         moves_offset[MapLoader::valid_moves_t::WAIT_MOVE] = 0;
         moves_offset[MapLoader::valid_moves_t::NORTH] = -cols;
