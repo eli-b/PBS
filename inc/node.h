@@ -16,19 +16,11 @@ using boost::heap::compare;
 
 using namespace std;
 
-struct pathEntry
-{
-    int location;
-    MapLoader::valid_actions_t action;
-    MapLoader::orientation_t orientation;
-};
-
 class Node
 {
 public:
 
     int loc;
-    MapLoader::valid_actions_t action;
     double g_val;
     double h_val = 0;
     Node* parent;
@@ -36,7 +28,6 @@ public:
     int num_internal_conf = 0;  // used in ECBS
     bool in_openlist = false;
     int num_non_hwy_edges = 0;  // used in ECBS_HWY
-    MapLoader::orientation_t orientation = MapLoader::FACE_EAST;
 
     ///////////////////////////////////////////////////////////////////////////////
     // NOTE -- Normally, compare_node (lhs,rhs) suppose to return true if lhs<rhs.
@@ -118,11 +109,11 @@ public:
 
     Node(const Node& other);
 
-    Node(int loc, MapLoader::valid_actions_t action,
+    Node(int loc,
          double g_val, double num_of_collisions,
          Node* parent, int timestep,
          int num_internal_conf = 0, bool in_openlist = false,
-         int num_non_hwy_edges = 0, MapLoader::orientation_t orientation = MapLoader::FACE_EAST);
+         int num_non_hwy_edges = 0);
 
     inline double getFVal() const
     { return g_val + h_val; }

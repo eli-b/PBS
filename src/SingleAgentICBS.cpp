@@ -1,22 +1,5 @@
 #include "SingleAgentICBS.h"
 
-inline int offset2action(int offset, const int* move_offsets)
-{
-    for (int i = 0; i < 5; i++)
-    {
-        if (move_offsets[i] == offset)
-        {
-            return i;
-        }
-    }
-}
-
-inline int action2offset(int action, const int* move_offsets)
-{
-    return move_offsets[action];
-}
-
-
 void SingleAgentICBS::updatePath(const LLNode* goal, vector<PathEntry>& path)
 {
     //path = std::shared_ptr<vector<PathEntry>>(new vector<PathEntry>(goal->timestep + 1));
