@@ -29,19 +29,7 @@ public:
     {
         NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT
     };  // MOVE_COUNT is the enum's size
-    int* moves_offset;
-
-    enum valid_actions_t
-    {
-        WAIT_ACTION, MOVE, ROTATE_L, ROTATE_R, ACTIONS_COUNT
-    };
-    int* actions_offset;
-
-    enum orientation_t
-    {
-        FACE_NORTH, FACE_EAST, FACE_SOUTH, FACE_WEST, ORIENTATION_COUNT
-    };
-
+    int* moves_offset = nullptr;
 
     MapLoader(std::string fname); // load map from file
     MapLoader(int rows, int cols); // initialize new [rows x cols] empty map
