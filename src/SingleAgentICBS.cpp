@@ -94,8 +94,11 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
     lower_bound = max(lowerbound, f_weight * min_f_val);
 
     int lastGoalConsTime = cat_higher_priority.latest_vertex_entry(goal_location);
-    int timeLastConstraintAvoidableWithWait = cat_higher_priority.latest_entry() - 1;  // Note locations _can_ be blocked after this time if they
-                                                                                       // are blocked forever, but waiting won't help avoid them
+    int timeLastConstraintAvoidableWithWait = std::max(
+            std::max(cat_higher_priority.latest_entry(),
+                     cat_unset_priority.latest_entry()),
+            cat_lower_priority.latest_entry()
+        ) - 1; // Note locations _can_ be blocked after this time if they are blocked forever, but waiting won't help avoid them
 
 #ifdef  _DEBUG
     if (agent_id == 0 || agent_id == 7) {
