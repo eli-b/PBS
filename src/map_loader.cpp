@@ -9,7 +9,7 @@
 #include<boost/tokenizer.hpp>
 #include <stdlib.h>
 #include <stdio.h>
-#include <climits>
+#include <limits>
 #include <float.h>
 #include <vector>
 #include <iostream>
@@ -152,7 +152,7 @@ void MapLoader::printHeuristic(const double* mapH, const int agent_id)
     {
         if (i % cols == 0)
             cout << endl;
-        if (mapH[i] == DBL_MAX)
+        if (mapH[i] == std::numeric_limits<double>::max())
             cout << "*,";
         else
             cout << mapH[i] << ",";
