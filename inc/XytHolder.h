@@ -74,11 +74,11 @@ public:
                 std::abort();
             }
             else if (it_t > t) {
-                data[location_id]->insert(it, std::make_tuple(t, std::unique_ptr<T>(value)));  // inserts before the iterator
+                data[location_id]->emplace(it, t, value);  // inserts before the iterator
                 return;
             }
         }
-        data[location_id]->push_back(std::make_tuple(t, std::unique_ptr<T>(value)));
+        data[location_id]->emplace_back(t, value);
     }
 
     ~XytHolder() {
