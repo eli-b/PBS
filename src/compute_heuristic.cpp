@@ -1,7 +1,7 @@
+#include <limits>
 #include <boost/heap/fibonacci_heap.hpp>
 #include "compute_heuristic.h"
 #include <cstring>
-#include <climits>
 #include "node.h"
 
 
@@ -33,7 +33,7 @@ void ComputeHeuristic::getHVals(vector<int>& res)
     size_t root_location = goal_location;
     res.resize(map_rows * map_cols);
     for (int i = 0; i < map_rows * map_cols; i++)
-        res[i] = INT_MAX;
+        res[i] = std::numeric_limits<int>::max();
     // generate a heap that can save nodes (and a open_handle)
     boost::heap::fibonacci_heap<Node*, boost::heap::compare<Node::compare_node>> heap;
     boost::heap::fibonacci_heap<Node*, boost::heap::compare<Node::compare_node>>::handle_type open_handle;
@@ -95,7 +95,7 @@ double* ComputeHeuristic::getShortestPathVals(int root_location)
 {
     double* res = new double[map_rows * map_cols];
     for (int i = 0; i < map_rows * map_cols; i++)
-        res[i] = DBL_MAX;
+        res[i] = std::numeric_limits<double>::max();
     // generate a heap that can save nodes (and a open_handle)
     boost::heap::fibonacci_heap<Node*, boost::heap::compare<Node::compare_node>> heap;
     boost::heap::fibonacci_heap<Node*, boost::heap::compare<Node::compare_node>>::handle_type open_handle;
