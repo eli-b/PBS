@@ -8,7 +8,7 @@ include_directories(inc)
 file(GLOB SOURCES "src/*.cpp")
 
 # Find Boost
-find_package( Boost 1.72.0 REQUIRED COMPONENTS program_options system filesystem)
+find_package( Boost 1.71.0 REQUIRED COMPONENTS program_options system filesystem)
 include_directories(
         ${Boost_INCLUDE_DIRS}
         "inc"
