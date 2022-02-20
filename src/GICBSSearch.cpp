@@ -154,12 +154,10 @@ inline int GICBSSearch::getAgentLocation(int agent_id, size_t timestep)
 // May absolutely find new paths for multiple agents!
 bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbound)
 {
-    // extract all constraints on agent ag
-    //GICBSNode* curr = node;
     bool foundSol = true;
-    vector<vector<bool>> consistent(num_of_agents, vector<bool>(num_of_agents, true));
     vector<vector<PathEntry>> new_paths(num_of_agents, vector<PathEntry>());
 
+    // Prepare a topological sort of the agents from ag and below it.
     vector<bool> visited(num_of_agents, true);
     for (int i = 0; i < num_of_agents; i++)
     {
@@ -170,7 +168,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
     }
     stack<pair<bool, int>> dfs;
     list<int> topSort;
-    dfs.push(make_pair(false, ag));
+    dfs.push(make_pair(false, ag));  // <Whether we've already opened it, The agent>
     while (!dfs.empty())
     {
         pair<bool, int> parent = dfs.top();
@@ -190,6 +188,15 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
             }
         }
     }
+
+    // Find a new path for ag and for every lower-priority agent that has a collision with a new path.
+    // Initially, we assume all paths are consistent with the current priority ordering, so consistent[a][b] = true
+    // for all a and b.
+    // If a has higher priority than b (a≺b), then consistent[a][b] = true.
+    // After we find a new path for agent b, we set consistent[a][b] = true for all agents a with higher priority,
+    // and consistent[b][c] = false for every agent c with lower priority, meaning we can no longer assume without
+    // checking that c's path has no collisions with b's.
+    vector<vector<bool>> consistent(num_of_agents, vector<bool>(num_of_agents, true));
     for (auto iter = topSort.begin(); iter != topSort.end(); iter++)
     {
         int curr_agent = *iter;
@@ -237,7 +244,9 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
                 break;
             }
         }
-        if (!isColliding && curr_agent != ag)
+        if (!isColliding && curr_agent != ag)  // Current agent isn't colliding with any higher-priority agent in the
+                                               // topological sort and isn't the original agent we need to find a path
+                                               // for - no need to find a new path for it
         {
             continue;
         }
@@ -276,7 +285,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
                 {
                     consistent[curr_agent][i] = false;
                 }
-                if (node->trans_priorities[i][curr_agent] && !consistent[i][curr_agent])
+                if (node->trans_priorities[i][curr_agent])
                 {
                     consistent[i][curr_agent] = true;
                 }
@@ -845,12 +854,14 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
             paths_found_initially.resize(num_of_agents);
             dummy_start->priorities = vector<vector<bool>>(num_of_agents, vector<bool>(num_of_agents, false));
             dummy_start->trans_priorities = vector<vector<bool>>(num_of_agents, vector<bool>(num_of_agents, false));
+
             vector<int> ordering(num_of_agents);
             for (int i = 0; i < num_of_agents; i++)
             {
                 ordering[i] = i;
             }
             std::shuffle(ordering.begin(), ordering.end(), g);
+
             // Go over agents in decreasing order of priority
             for (int i = 0; i < num_of_agents; i++)
             {

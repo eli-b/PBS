@@ -161,7 +161,7 @@ bool SingleAgentICBS::findPath(vector<PathEntry>& path, double f_weight, const v
             if (curr->timestep == timeLastConstraintAvoidableWithWait)
                 next_timestep = curr->timestep;  // Super important! A node's identity is derived from its location and
                                                  // its time step, but NOT from its g-value. This allows us to exhaust
-                                                 // the open list once we pass the last avoidable constraint. Otherwise
+                                                 // the open list once we pass the last avoidable constraint. Otherwise,
                                                  // we would be able to move back and forth between two locations forever
                                                  // if the agent is blocked by a higher priority agent waiting at its goal.
             int next_g_val = curr->g_val + 1;
