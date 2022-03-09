@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cstdlib>
 #include "GICBSNode.h"
 #include "SingleAgentICBS.h"
 #include "compute_heuristic.h"
@@ -47,6 +47,7 @@ public:
     const int* moves_offset;
     int num_col;
     AgentsLoader al;
+    set<int> all_agents;
 
 
     uint64_t num_single_pathfinding = 0;
@@ -70,7 +71,19 @@ public:
 
     inline void updatePaths(GICBSNode* curr);
 
+    void copyConflicts(const AgentsConflicts& conflicts, AgentsConflicts& copy, 
+        const set<int>& excluded_agents);
+
+    bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
+    shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, size_t start_t=0);
+
+    void findConflicts(GICBSNode& curr, uint64_t num);
     void findConflicts(GICBSNode& curr);
+    bool isCollide(const GICBSNode& curr, int a1, int a2);
+    void selectConflict(GICBSNode& curr);
+    void printConflicts(GICBSNode& curr);
+
+    set<int> findMetaAgent(const GICBSNode& curr, int ag, size_t size_th=SIZE_MAX);
 
     int countCollidingPairs();
 
@@ -89,6 +102,7 @@ public:
     inline void releaseOpenListNodes();
 
     void printPaths() const;
+    void printAgentPath(int ag) const;
 
     void printConflicts(const GICBSNode& n) const;
 
@@ -99,4 +113,3 @@ public:
 
     ~GICBSSearch();
 };
-

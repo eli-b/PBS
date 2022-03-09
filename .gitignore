@@ -2,3 +2,4 @@ cmake*
 .idea
 build
 .vscode
+result_debug.csv

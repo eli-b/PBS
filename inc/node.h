@@ -2,7 +2,7 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <boost/heap/fibonacci_heap.hpp>
+#include <boost/heap/pairing_heap.hpp>
 #include <boost/functional/hash.hpp>
 #include <string>
 #include <vector>
@@ -10,7 +10,7 @@
 #include <time.h>
 #include "map_loader.h"
 
-using boost::heap::fibonacci_heap;
+using boost::heap::pairing_heap;
 using boost::heap::compare;
 
 
@@ -97,9 +97,9 @@ public:
     };  // used by FOCAL (heap) to compare nodes (top of the heap has min number-of-conflicts)
 
     // define a typedefs for handles to the heaps (allow up to quickly update a node in the heap)
-    typedef boost::heap::fibonacci_heap<Node*, compare<Node::compare_node>>::handle_type open_handle_t;
-    typedef boost::heap::fibonacci_heap<Node*, compare<Node::secondary_compare_node>>::handle_type focal_handle_t;  // ECBS
-    //typedef boost::heap::fibonacci_heap< Node* , compare<secondary_hwy_compare_node> >::handle_type focal_handle_t;  // ECBS_HWY
+    typedef boost::heap::pairing_heap<Node*, compare<Node::compare_node>>::handle_type open_handle_t;
+    typedef boost::heap::pairing_heap<Node*, compare<Node::secondary_compare_node>>::handle_type focal_handle_t;  // ECBS
+    //typedef boost::heap::pairing_heap< Node* , compare<secondary_hwy_compare_node> >::handle_type focal_handle_t;  // ECBS_HWY
 
     open_handle_t open_handle;
     focal_handle_t focal_handle;

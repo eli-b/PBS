@@ -31,56 +31,527 @@ inline void GICBSSearch::updatePaths(GICBSNode* curr)
     }
 }
 
+bool GICBSSearch::findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num, size_t start_t)
+{
+    // #ifdef DEBUG
+    // if (a1 == 0 && a2 == 38)
+    //     cout << endl;
+    // shared_ptr<Conflict> __conf__ = findEarliestConflict(curr, a1, a2, start_t);
+    // endif
+
+    pair<int, int> conf_ags = make_pair(min(a1,a2), max(a1,a2));
+    if (curr.conflicts.count(conf_ags) && curr.conflicts[conf_ags].back() == nullptr)
+        return true;  // All the conflicts are found
+
+    shared_ptr<Conflict> conf;
+    uint64_t count = 0;
+    size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
+    for (size_t timestep = start_t; timestep < min_path_length; timestep++)
+    {
+        int loc1 = paths[a1]->at(timestep).location;
+        int loc2 = paths[a2]->at(timestep).location;
+        if (loc1 == loc2)
+        {
+            // This is a vertex conflict
+            conf = make_shared<Conflict>(a1, a2, loc1, -1, timestep);
+            if (!curr.conflicts.count(conf_ags))
+                curr.conflicts[conf_ags] = list<shared_ptr<Conflict>>({conf});
+            else
+                curr.conflicts[conf_ags].push_back(conf);
+            count ++;
+            if (count == num)
+                return true;
+        }
+        else if (timestep < min_path_length - 1
+                    && loc1 == paths[a2]->at(timestep + 1).location
+                    && loc2 == paths[a1]->at(timestep + 1).location)
+        {
+            // This is an edge conflict
+            conf = make_shared<Conflict>(a1, a2, loc1, loc2, timestep + 1);
+            if (!curr.conflicts.count(conf_ags))
+                curr.conflicts[conf_ags] = list<shared_ptr<Conflict>>({conf});
+            else
+                curr.conflicts[conf_ags].push_back(conf);
+            count ++;
+            if (count == num)
+                return true;
+        }
+    }
+    if (paths[a1]->size() != paths[a2]->size())
+    {
+        int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
+        int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
+        int loc1 = paths[a1_]->back().location;
+        for (size_t timestep = max(start_t, min_path_length); timestep < paths[a2_]->size(); timestep++)
+        {
+            int loc2 = paths[a2_]->at(timestep).location;
+            if (loc1 == loc2)
+            {
+                conf = make_shared<Conflict>(a1_, a2_, loc1, -1, timestep);
+                if (!curr.conflicts.count(conf_ags))
+                    curr.conflicts[conf_ags] = list<shared_ptr<Conflict>>({conf});
+                else
+                    curr.conflicts[conf_ags].push_back(conf);
+                count ++;
+                if (count == num)
+                    return true;
+            }
+        }
+    }
+    // Add a pseudo conflict at the end if all the conflicts are founded
+    // Check if conf_ags is in the key
+    // Check if there are conflicts
+    if (curr.conflicts.count(conf_ags) && curr.conflicts[conf_ags].size() > 0)
+    {
+        curr.conflicts[conf_ags].push_back(nullptr);
+        return true;
+    }
+    assert(!curr.conflicts.count(conf_ags));
+    return false;
+}
+
+shared_ptr<Conflict> GICBSSearch::findEarliestConflict(GICBSNode& curr, int a1, int a2, size_t start_t)
+{
+    assert(a1 != a2);
+    int _a1_ = min(a1, a2);
+    int _a2_ = max(a1, a2);
+    pair<int, int> conf_ags = make_pair(_a1_, _a2_);
+    if (curr.conflicts.count(conf_ags) && curr.conflicts[conf_ags].back() == nullptr)
+        return curr.conflicts[conf_ags].front();  // All the conflicts are found
+
+    size_t min_path_length = paths[_a1_]->size() < paths[_a2_]->size() ? paths[_a1_]->size() : paths[_a2_]->size();
+    for (size_t timestep = start_t; timestep < min_path_length; timestep++)
+    {
+        int loc1 = paths[_a1_]->at(timestep).location;
+        int loc2 = paths[_a2_]->at(timestep).location;
+        if (loc1 == loc2)
+        {
+            // This is a vertex conflict
+            return make_shared<Conflict>(_a1_, _a2_, loc1, -1, timestep);
+        }
+        else if (timestep < min_path_length - 1
+                    && loc1 == paths[_a2_]->at(timestep + 1).location
+                    && loc2 == paths[_a1_]->at(timestep + 1).location)
+        {
+            // This is an edge conflict
+            return make_shared<Conflict>(_a1_, _a2_, loc1, loc2, timestep + 1);
+        }
+    }
+    if (paths[_a1_]->size() != paths[_a2_]->size())
+    {
+        int a1_ = paths[_a1_]->size() < paths[_a2_]->size() ? _a1_ : _a2_;
+        int a2_ = paths[_a1_]->size() < paths[_a2_]->size() ? _a2_ : _a1_;
+        int loc1 = paths[a1_]->back().location;
+        for (size_t timestep = max(start_t, min_path_length); timestep < paths[a2_]->size(); timestep++)
+        {
+            int loc2 = paths[a2_]->at(timestep).location;
+            if (loc1 == loc2)
+            {
+                return make_shared<Conflict>(a1_, a2_, loc1, -1, timestep);
+            }
+        }
+    }
+    return nullptr;
+}
+
+bool GICBSSearch::isCollide(const GICBSNode& curr, int a1, int a2)
+{
+    size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
+    for (size_t timestep = 0; timestep < min_path_length; timestep++)
+    {
+        int loc1 = paths[a1]->at(timestep).location;
+        int loc2 = paths[a2]->at(timestep).location;
+        if (loc1 == loc2)
+        {
+            // This is a vertex conflict
+            cout << endl;
+            cout << "*********************************" << endl;
+            cout << a1 << " and " << a2 << " collide at (";
+            cout << loc1 / num_col << "," << loc1 % num_col << ") at time " << timestep << endl;
+            cout << "*********************************" << endl;
+            return true;
+        }
+        else if (timestep < min_path_length - 1
+                    && loc1 == paths[a2]->at(timestep + 1).location
+                    && loc2 == paths[a1]->at(timestep + 1).location)
+        {
+            // This is an edge conflict
+            cout << endl;
+            cout << "*********************************" << endl;
+            cout << a1 << " and " << a2 << " collide at (" << loc1/num_col << "," << loc1%num_col;
+            cout << ") and (" << loc2/num_col << "," << loc2%num_col <<") at time " << timestep << endl;
+            cout << "*********************************" << endl;
+            return true;
+        }
+    }
+    if (paths[a1]->size() != paths[a2]->size())
+    {
+        int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
+        int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
+        int loc1 = paths[a1_]->back().location;
+        for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
+        {
+            int loc2 = paths[a2_]->at(timestep).location;
+            if (loc1 == loc2)
+            {
+                cout << endl;
+                cout << "*********************************" << endl;
+                cout << a1_ << " and " << a2_ << " collide at (" << loc1 / num_col << "," << loc1 % num_col << ") at time " << timestep << endl;
+                cout << "*********************************" << endl;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void GICBSSearch::copyConflicts(const AgentsConflicts& conflicts, AgentsConflicts& copy,
+    const set<int>& excluded_agents)
+{
+    for (const auto& ag_conf : conflicts)
+    {
+        bool found = false;
+        for (const int& a : excluded_agents)
+        {
+            if (ag_conf.first.first == a || ag_conf.first.second == a)
+            {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            copy[ag_conf.first] = ag_conf.second;
+        }
+    }
+    return;
+}
+
 void GICBSSearch::findConflicts(GICBSNode& curr)
 {
-    //vector<bool> hasConflicts(num_of_agents, false);
-    for (int a1 = 0; a1 < num_of_agents; a1++)
+    if (curr.parent == nullptr)
     {
-        for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
+        shared_ptr<Conflict> tmp_conf = nullptr;
+        for (int a1 = 0; a1 < num_of_agents; a1++)
         {
-            size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
-            for (size_t timestep = 0; timestep < min_path_length; timestep++)
+            for (int a2 = a1+1; a2 < num_of_agents; a2++)
             {
-                int loc1 = paths[a1]->at(timestep).location;
-                int loc2 = paths[a2]->at(timestep).location;
-                if (loc1 == loc2)
+                tmp_conf = findEarliestConflict(curr, a1, a2);
+                if (tmp_conf != nullptr)
                 {
-                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1, a2, loc1, -1, timestep);
-                    return;
-                    //hasConflicts[a1] = true;
-                    //hasConflicts[a2] = true;
-                }
-                else if (timestep < min_path_length - 1
-                         && loc1 == paths[a2]->at(timestep + 1).location
-                         && loc2 == paths[a1]->at(timestep + 1).location)
-                {
-                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1, a2, loc1, loc2, timestep + 1);
-                    //hasConflicts[a1] = true;
-                    //hasConflicts[a2] = true;
+                    curr.conflict = tmp_conf;
                     return;
                 }
             }
-            if (paths[a1]->size() != paths[a2]->size())
+        }
+        assert(tmp_conf == nullptr);
+        curr.conflict = tmp_conf;  // There is no conflict in the root node!
+    }
+    else
+    {
+        // Find the internal conflict of the previously-merged agent
+        // cout << "------------------------------------" << endl;
+        // cout << "At node->time_generated " << curr.time_generated << ", ";
+        // cout << "Replan agent " << curr.agent_id << endl;
+        // cout << "Find internal conflict: ";
+        assert(curr.agent_id != -1);
+        set<int> curr_ma = findMetaAgent(curr, curr.agent_id);
+        for (auto it1=curr_ma.begin(); it1!=curr_ma.end(); it1++)
+        {
+            for (auto it2=next(it1); it2!=curr_ma.end(); it2++)
             {
-                int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
-                int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
-                int loc1 = paths[a1_]->back().location;
-                for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
+                shared_ptr<Conflict> tmp_conf = findEarliestConflict(curr, *it1, *it2);
+                if (tmp_conf != nullptr)
                 {
-                    int loc2 = paths[a2_]->at(timestep).location;
-                    if (loc1 == loc2)
+                    // cout << "<" << get<0>(tmp_conf) << ", " << get<1>(tmp_conf) 
+                    //     << ", " << get<2>(tmp_conf) << ", " << get<3>(tmp_conf) 
+                    //     << ", " << get<4>(tmp_conf) << ">" << endl;
+                    curr.conflict = tmp_conf;
+                    return;
+                }
+                // if (curr.trans_priorities[*it1][*it2] || curr.trans_priorities[*it2][*it1])
+                //     continue;
+                // else
+                // {
+                //     shared_ptr<Conflict> tmp_conf = findEarliestConflict(curr, *it1, *it2);
+                //     if (tmp_conf != nullptr)
+                //     {
+                //         curr.conflict = tmp_conf;
+                //         cout << "<" << get<0>(*curr.conflict) << ", " << get<1>(*curr.conflict) 
+                //             << ", " << get<2>(*curr.conflict) << ", " << get<3>(*curr.conflict) 
+                //             << ", " << get<4>(*curr.conflict) << ">" << endl;
+                //         return;
+                //     }
+                // }
+            }
+        }
+        // cout << "None" << endl;
+        // // Debug
+        // for (auto it1=curr_ma.begin(); it1!=curr_ma.end(); it1++)
+        // {
+        //     for (auto it2=next(it1); it2!=curr_ma.end(); it2++)
+        //     {
+        //         if (isCollide(curr, *it1, *it2))
+        //         {
+        //             cout << "Missing internal conflict between agents " << *it1 << " and " << *it2 << endl;
+        //             cout << "transPriorities[" << *it1 << "][" << *it2 << "]" << curr.trans_priorities[*it1][*it2] << endl;
+        //             cout << "transPriorities[" << *it2 << "][" << *it1 << "]" << curr.trans_priorities[*it2][*it1] << endl;
+        //         }
+        //         assert(!isCollide(curr, *it1, *it2));
+        //     }
+        // }
+        // // end debug
+
+        // cout << "Find min size of agent";
+        size_t min_total_size = SIZE_MAX;
+        list<shared_ptr<Conflict>> min_size_conf;
+        for (int a1 = 0; a1 < num_of_agents; a1++)
+        {
+            set<int> ma1 = findMetaAgent(curr, a1, min_total_size+1);
+            // cout << "--- agent a1: " << a1 << endl;
+            // cout << "ma1: ";
+            // for (const int& da1 : ma1)
+            // {
+            //     cout << da1 << ", ";
+            // }
+            // cout << endl;
+
+            if (ma1.size() > min_total_size)
+            {
+                assert(ma1.size() == min_total_size+1);
+                // cout << "\tma1 size > min_total_size" << min_total_size << endl;
+                continue;
+            }
+
+            for (int a2 = a1+1; a2 < num_of_agents; a2++)
+            {
+                if (find(ma1.begin(), ma1.end(), a2) != ma1.end())  // a2 is in ma1
+                {
+                    // cout << "--- agent a2: " << a2 << " is in ma1 ---" << endl;
+                    continue;
+                }
+                else
+                {
+                    set<int> ma2 = findMetaAgent(curr, a2, min_total_size+1);
+                    // cout << "ma2: ";
+                    // for (const int& da1 : ma2)
+                    // {
+                    //     cout << da1 << ", ";
+                    // }
+                    // cout << endl;
+
+                    if (ma2.size() > min_total_size)
                     {
-                        curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1_, a2_, loc1, -1, timestep); // It's at least a semi conflict
-                        //curr.unknownConf.front()->cost1 = timestep + 1;
-                        //hasConflicts[a1] = true;
-                        //hasConflicts[a2] = true;
-                        return;
+                        // cout << "\tma2 size > min_total_size" << min_total_size << endl;
+                        assert(ma2.size() == min_total_size+1);
+                        continue;
+                    }
+
+                    if (ma1.size() + ma2.size() > min_total_size)
+                    {
+                        // cout << "\tma1+ma2 size > min_total_size" << min_total_size << endl;
+                        continue;
+                    }
+                    else
+                    {
+                        shared_ptr<Conflict> tmp_conf = findEarliestConflict(curr, a1, a2);
+                        if (tmp_conf == nullptr)
+                        {
+                            continue;
+                        }
+                        else if (ma1.size() + ma2.size() < min_total_size)
+                        {
+                            min_total_size = ma1.size() + ma2.size();
+                            min_size_conf.clear();
+                        }
+                        min_size_conf.emplace_back(tmp_conf);
                     }
                 }
             }
         }
+
+        if (!min_size_conf.empty())
+        {
+            // for (const auto& conf : min_size_conf)
+            // {
+            //     cout << "<" << get<0>(*conf) << ", " << get<1>(*conf) << ", " << get<2>(*conf) 
+            //         << ", " << get<3>(*conf) << ", " << get<4>(*conf) << "> | ";
+            // }
+            // cout << endl;
+            list<shared_ptr<Conflict>>::iterator cit = min_size_conf.begin();
+            int random = rand() % min_size_conf.size();
+            std::advance(cit, random);
+            curr.conflict = *cit;
+        }
+        else
+        {
+            curr.conflict = nullptr;  // It is a goal node (conflict-free)
+            // Debug
+            for (int da1 = 0; da1 < num_of_agents; da1++)
+            {
+                for (int da2 = da1+1; da2 < num_of_agents; da2++)
+                {
+                    assert(!isCollide(curr, da1, da2));
+                }
+            }
+            // end debug
+        }
     }
-    curr.conflict = NULL;
+
+    return;
+}
+
+void GICBSSearch::selectConflict(GICBSNode& curr)
+{   
+    size_t min_size = SIZE_MAX;
+    unordered_map<pair<int,int>, set<int>, pair_hash> min_size_ma;
+    for (const auto& conf : curr.conflicts)
+    {
+        set<int> ma = findMetaAgent(curr, conf.first.first);  // meta-agent of a1
+        if (find(ma.begin(), ma.end(), conf.first.second) != ma.end()) // Internal conflict
+        {
+            curr.conflict = conf.second.front();
+            break;
+        }
+        
+        else  // External conflict
+        {
+            set<int> ma2 = findMetaAgent(curr, conf.first.second);
+            ma.merge(ma2);  // merge the list of meta-agents of a2
+            if (ma.size() < min_size)  // Reset the dict if a smaller meta-agent is found
+            {
+                min_size_ma.clear();
+                min_size_ma[conf.first] = ma;
+                min_size = ma.size();
+            }
+            else if (ma.size() == min_size)
+            {
+                min_size_ma[conf.first] = ma;
+            }
+        }
+        
+        // // Debug: compare if there is common term in ma and ma2
+        // cout << "[" << conf.first.first << "]: {";
+        // for(const int& a : ma)
+        //     cout << a << ", ";
+        // cout << "} | [" << conf.first.second << "]: {";
+        // for(const int& a : ma2)
+        //     cout << a << ", ";
+        // cout << "}" << endl;
+
+        // bool is_same = false;
+        // for (const int& tmp_a1 : ma)
+        // {
+        //     if (find(ma2.begin(), ma2.end(), tmp_a1) != ma2.end())
+        //     {
+        //         is_same = true;
+        //         break;
+        //     }
+        // }
+        // assert(!is_same);
+    }
+
+    // Tie-breaking with the maximum number of conflicts with agents outside the meta-agent
+    size_t max_num_conf = 0;
+    pair<int,int> target_ma;
+    for (const auto& ma : min_size_ma)
+    {
+        size_t num_conf = 0;
+        // Find the external conflicts for (a1, a2)
+        for (const auto& conf : curr.conflicts)
+        {
+            if (conf.first == ma.first)
+                continue;
+
+            int a1 = conf.first.first;
+            int a2 = conf.first.second;
+            bool is_a1_ma = find(ma.second.begin(), ma.second.end(), a1) != ma.second.end();
+            bool is_a2_ma = find(ma.second.begin(), ma.second.end(), a2) != ma.second.end();
+            if ((is_a1_ma && !is_a2_ma) || (!is_a1_ma && is_a2_ma))
+            {
+                // Find all the external conflicts
+                auto rit = conf.second.rbegin();
+                if (*rit != nullptr)  // Not all the conflicts are found
+                {
+                    assert(conf.second.size() == 1);
+                    int last_timestep = get<4>(**rit);
+                    findAgentsConflicts(curr, a1, a2, INT64_MAX, last_timestep+1);
+
+                    for (auto it1=curr.conflicts[make_pair(a1,a2)].begin(); it1!=curr.conflicts[make_pair(a1,a2)].end(); it1++)
+                    {
+                        for (auto it2=next(it1,1); it2!=curr.conflicts[make_pair(a1,a2)].end(); it2++)
+                        {
+                            if (it1 == it2)
+                            {
+                                // printConflicts(curr);
+                                assert(false);
+                                exit(-1);
+                            }
+                        }
+                    }
+                    // printConflicts(curr);
+                }
+                assert(conf.second.back() == nullptr);
+                num_conf += conf.second.size() - 1;  // Ignore the nullptr 
+            }
+        }
+
+        if (num_conf > max_num_conf)  // Assume there is only one target_ma
+        {
+            target_ma = ma.first;
+            max_num_conf = num_conf;
+        }
+        else if (num_conf == max_num_conf)
+        {
+            target_ma = ma.first;
+        }
+    }
+    curr.conflict = curr.conflicts[target_ma].front();
+    assert(curr.conflict != nullptr);
+    // cout << "select conflict: " << "<" << get<0>(*curr.conflict) << ", " << get<1>(*curr.conflict);
+    // cout << ", " << get<2>(*curr.conflict) << ", " << get<3>(*curr.conflict) << ", ";
+    // cout << get<4>(*curr.conflict) << ">" << endl;
+    // cout << "Select conflict DONE!!" << endl;
+    return;
+}
+
+set<int> GICBSSearch::findMetaAgent(const GICBSNode& curr, int ag, size_t size_th)
+{
+    // Use DFS to find the connected component
+    // TODO: memorize the meta-agent in the curr node
+    set<int> ma;
+    vector<int> is_visited(num_of_agents, false);
+    list<int> open_list = list<int>({ag});
+    is_visited[ag] = true;
+    while(!open_list.empty())
+    {
+        int cur_ag = open_list.front();
+        ma.insert(cur_ag);
+        if (ma.size() == size_th)
+            break;
+        open_list.pop_front();
+        for (int a2 = 0; a2 < num_of_agents; a2++)
+        {
+            if(((curr.trans_priorities[cur_ag][a2] && !curr.trans_priorities[a2][cur_ag]) || 
+                (curr.trans_priorities[a2][cur_ag] && !curr.trans_priorities[cur_ag][a2])) && 
+                !is_visited[a2])
+            {
+                assert(find(ma.begin(), ma.end(), a2) == ma.end());
+                is_visited[a2] = true;
+                open_list.push_front(a2);
+            }
+        }
+    }
+    // ma.sort();
+    return ma;
+}
+
+void GICBSSearch::findConflicts(GICBSNode& curr, uint64_t num)
+{
+    curr.conflict = NULL;  // Initialize the conflict pointer to nullptr
+    for (int a1 = 0; a1 < num_of_agents; a1++)
+        for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
+            findAgentsConflicts(curr, a1, a2, num);
     return;
 }
 
@@ -154,6 +625,12 @@ inline int GICBSSearch::getAgentLocation(int agent_id, size_t timestep)
 // May absolutely find new paths for multiple agents!
 bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbound)
 {
+    // Debug
+    // cout << "\n\n########## Replan agent " << ag << " ##########" << endl;
+    // cout << "node: " << node->time_expanded << ", " << node->time_generated << endl;
+    // printAgentPath(ag);
+    // cout << "##########################" << endl;
+
     bool foundSol = true;
     vector<vector<PathEntry>> new_paths(num_of_agents, vector<PathEntry>());
 
@@ -203,8 +680,8 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         bool isColliding = false;
         for (int a2 = 0; a2 < num_of_agents; a2++)
         {
-            if (!consistent[a2][curr_agent])
-            {
+            // if (!consistent[a2][curr_agent])
+            // {
                 size_t min_path_length =
                         paths[curr_agent]->size() < paths[a2]->size() ? paths[curr_agent]->size() : paths[a2]->size();
                 for (size_t timestep = 0; timestep < min_path_length; timestep++)
@@ -238,7 +715,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
                         }
                     }
                 }
-            }
+            // }
             if (isColliding)
             {
                 break;
@@ -261,7 +738,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         //foundSol = search_engines[curr_agent]->findPath(newPath.second, focal_w, node->trans_priorities, paths, max_plan_len, lowerbound);
         num_single_pathfinding++;
 
-        auto t1 = std::clock();
+        // auto t1 = std::clock();
         //findConflicts(*node);
         foundSol = search_engines[curr_agent]->findPath(new_paths[curr_agent], focal_w, node->trans_priorities, paths,
                                                         max_plan_len, lowerbound);
@@ -356,20 +833,20 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     }
     else // negative constraint
     {
-        double lowerbound;
-        if (get<2>(*curr->conflict) < 0) // rectangle conflict
-            lowerbound = (int) paths[node->agent_id]->size() - 1;
-        else if (get<4>(*curr->conflict) >=
-                 (int) paths[node->agent_id]->size()) //conflict happens after agent reaches its goal
-            lowerbound = get<4>(*curr->conflict) + 1;
-        else if (!paths[node->agent_id]->at(get<4>(*curr->conflict)).single) // not cardinal
-            lowerbound = (int) paths[node->agent_id]->size() - 1;
-        else if (get<2>(*curr->conflict) >= 0 && get<3>(*curr->conflict) < 0) // Cardinal vertex
-            lowerbound = (int) paths[node->agent_id]->size();
-        else if (paths[node->agent_id]->at(get<4>(*curr->conflict) - 1).single) // Cardinal edge
-            lowerbound = (int) paths[node->agent_id]->size();
-        else // Not cardinal edge
-            lowerbound = (int) paths[node->agent_id]->size() - 1;
+        // double lowerbound;
+        // if (get<2>(*curr->conflict) < 0) // rectangle conflict
+        //     lowerbound = (int) paths[node->agent_id]->size() - 1;
+        // else if (get<4>(*curr->conflict) >=
+        //          (int) paths[node->agent_id]->size()) //conflict happens after agent reaches its goal
+        //     lowerbound = get<4>(*curr->conflict) + 1;
+        // else if (!paths[node->agent_id]->at(get<4>(*curr->conflict)).single) // not cardinal
+        //     lowerbound = (int) paths[node->agent_id]->size() - 1;
+        // else if (get<2>(*curr->conflict) >= 0 && get<3>(*curr->conflict) < 0) // Cardinal vertex
+        //     lowerbound = (int) paths[node->agent_id]->size();
+        // else if (paths[node->agent_id]->at(get<4>(*curr->conflict) - 1).single) // Cardinal edge
+        //     lowerbound = (int) paths[node->agent_id]->size();
+        // else // Not cardinal edge
+        //     lowerbound = (int) paths[node->agent_id]->size() - 1;
 
         if (!findPathForSingleAgent(node, node->agent_id))
             return false;
@@ -382,39 +859,13 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     node->f_val = node->g_val;
 
     t1 = std::clock();
-    //findConflicts(*node);
     runtime_conflictdetection += std::clock() - t1;
-    //node->num_of_colliding_pairs = countCollidingPairs();
 
     // update handles
     node->open_handle = open_list.push(node);
     HL_num_generated++;
     node->time_generated = HL_num_generated;
     allNodes_table.emplace_back(node);
-
-    // Copy single vector from parent
-    /*node->single.resize(num_of_agents);
-    for (int i = 0; i < curr->single.size(); i++)
-    {
-        if (!curr->single[i])
-            continue;
-        else
-        {
-            bool updated = false;
-            for (list<int>::iterator it = node->agents_updated.begin(); it != node->agents_updated.end(); it++)
-            {
-                if (*it == i)
-                {
-                    updated = true;
-                    break;
-                }
-            }
-            if (!updated)
-            {
-                node->single[i] = curr->single[i];
-            }
-        }
-    }*/
 
     return true;
 }
@@ -426,11 +877,22 @@ void GICBSSearch::printPaths() const
     {
         std::cout << "Agent " << i << " (" << paths_found_initially[i].size() - 1 << " -->" <<
                   paths[i]->size() - 1 << "): ";
-        for (int t = 0; t < paths[i]->size(); t++)
+        for (size_t t = 0; t < paths[i]->size(); t++)
             std::cout << "(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col
                       << ")->";
         std::cout << std::endl;
     }
+}
+
+
+void GICBSSearch::printAgentPath(int ag) const
+{
+    std::cout << "Agent " << ag << " (" << paths_found_initially[ag].size() - 1 << " -->" <<
+                  paths[ag]->size() - 1 << "): ";
+    for (size_t t = 0; t < paths[ag]->size(); t++)
+        std::cout << "(" << paths[ag]->at(t).location / num_col << "," << 
+            paths[ag]->at(t).location % num_col << ")->";
+    std::cout << std::endl;
 }
 
 
@@ -448,6 +910,22 @@ void GICBSSearch::printConstraints(const GICBSNode* n) const
         else
             std::cout << ", negative>" << std::endl;
         curr = curr->parent;
+    }
+}
+
+void GICBSSearch::printConflicts(GICBSNode& curr)
+{
+    for (const auto& conf : curr.conflicts)
+    {
+        cout << "[" << conf.first.first << ", " << conf.first.second << "]: ";
+        for (const auto c : conf.second)
+        {
+            if (c == nullptr)
+                cout << " NULL";
+            else
+                cout << "<" << get<2>(*c) << "," << get<3>(*c) << "," << get<4>(*c) << ">" << ",";
+        }
+        cout << endl;
     }
 }
 
@@ -535,22 +1013,24 @@ bool GICBSSearch::runGICBSSearch()
         }
         t1 = std::clock();
         curr = open_list.top();
-
         open_list.pop();
+        // cout << "Expand node id:" << curr->agent_id << ", expand:" << curr->time_expanded
+        //     << ", generate:" << curr->time_generated << endl;
         runtime_listoperation += std::clock() - t1;
         // takes the paths_found_initially and UPDATE all constrained paths found for agents from curr to dummy_start (and lower-bounds)
         t1 = std::clock();
         updatePaths(curr);
         runtime_updatepaths += std::clock() - t1;
-#ifdef DEBUG
+
+        #ifdef DEBUG
         //printPaths();
-#endif
+        #endif
+
         t1 = std::clock();
-        findConflicts(*curr);
+        findConflicts(*curr);  // Find one conflict for each conflicting pair of agents in node curr
         runtime_conflictdetection += std::clock() - t1;
 
-
-        if (curr->conflict == NULL) // Fail to find a conflict => no conflicts
+        if (curr->conflict == nullptr) // Fail to find a conflict => no conflicts
         {  // found a solution (and finish the while look)
             runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
             solution_found = true;
@@ -567,15 +1047,35 @@ bool GICBSSearch::runGICBSSearch()
 //			std::cout << std::endl << "****** Solution: " << std::endl;
 //			printPaths();
 //#endif
+            // Check the paths are valid
+            for (int a1 = 0; a1 < num_of_agents; a1++)
+            {
+                for (int a2=a1+1; a2 < num_of_agents; a2++)
+                {
+                    assert(!isCollide(*curr, a1, a2));
+                }
+            }
             break;
         }
 
+        // Select a conflict based on the size of the meta-agent
+        // We assume only merge operation is used to resolve each conflict
+        // 1. Check the size of meta-agents after merging
+        // 2. Find the minimum size of the meta-agent
+        // 3. Tie breaking with the highest number of conflicts
+        // selectConflict(*curr);
 
         //Expand the node
+        // cout << "\n\n================ find conflicts ================" << endl;
+        // cout << get<0>(*curr->conflict) << "," << get<1>(*curr->conflict) << "," << 
+        //     get<2>(*curr->conflict) << "," << get<3>(*curr->conflict) << "," << 
+        //     get<4>(*curr->conflict) << ",";
+        // cout << "\n============== end find conflicts =================" << endl;
+
         HL_num_expanded++;
         curr->time_expanded = HL_num_expanded;
 
-#ifdef DEBUG
+        #ifdef DEBUG
         std::cout << std::endl << "****** Expanded #" << curr->time_generated << " with f= " << curr->g_val <<
             "+" << curr->h_val << " (";
         for (int i = 0; i < num_of_agents; i++)
@@ -586,7 +1086,7 @@ bool GICBSSearch::runGICBSSearch()
             << ",loc1=(" << get<2>(*curr->conflict) / num_col << "," << get<2>(*curr->conflict) % num_col
             << "),loc2=(" << get<3>(*curr->conflict) / num_col << "," << get<3>(*curr->conflict) % num_col
             << "),t=" << get<4>(*curr->conflict) << ">" << std::endl;
-#endif
+        #endif
 
         GICBSNode* n1 = new GICBSNode();
         GICBSNode* n2 = new GICBSNode();
@@ -635,7 +1135,7 @@ bool GICBSSearch::runGICBSSearch()
             gen_n2 = false;
         }
 
-        if (gen_n1)
+        if (gen_n1)  // Generate node with a2->a1 (a2 has higher priotiry than a1)
         {
             n1->priorities = vector<vector<bool>>(curr->priorities);
             n1->trans_priorities = vector<vector<bool>>(curr->trans_priorities);
@@ -663,7 +1163,7 @@ bool GICBSSearch::runGICBSSearch()
         }
         paths = copy;
         //updatePaths(curr);
-        if (gen_n2)
+        if (gen_n2)  // Generate node with a1->a2 (a1 has higher priotiry than a2)
         {
             n2->priorities = vector<vector<bool>>(curr->priorities);
             n2->trans_priorities = vector<vector<bool>>(curr->trans_priorities);
@@ -791,7 +1291,7 @@ bool GICBSSearch::runGICBSSearch()
 
 
 GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr,
-                         constraint_strategy c, bool fixed_prior) : focal_w(f_w), fixed_prior(fixed_prior)
+                         constraint_strategy c, bool fixed_prior) : fixed_prior(fixed_prior), focal_w(f_w)
 {
     clock_t start_t = std::clock();
 
@@ -821,6 +1321,7 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
         search_engines[i] = new SingleAgentICBS(i, init_loc, goal_loc, ml.get_map(), ml.rows * ml.cols,
                                                 ml.moves_offset, ml.cols);
         ch.getHVals(search_engines[i]->my_heuristic);
+        all_agents.insert(i);
     }
 
     dummy_start = new GICBSNode();
@@ -924,16 +1425,11 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
         }
     }
 
-
-
-
-
     //ll_min_f_vals = ll_min_f_vals_found_initially;
     //paths_costs = paths_costs_found_initially;
 
     if (solution_cost != -2)
     {
-
         dummy_start->g_val = 0;
         for (int i = 0; i < num_of_agents; i++)
             dummy_start->g_val += paths[i]->size() - 1;
@@ -949,7 +1445,7 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
         HL_num_generated++;
         dummy_start->time_generated = HL_num_generated;
         allNodes_table.emplace_back(dummy_start);
-        findConflicts(*dummy_start);  // TODO: Should we add the time this takes to runtime_conflictdetection?
+        // findConflicts(*dummy_start);  // TODO: Should we add the time this takes to runtime_conflictdetection?
                                          //       It would mean it would slightly overlap with pre_runtime.
         //initial_g_val = dummy_start->g_val;
         min_f_val = dummy_start->f_val;

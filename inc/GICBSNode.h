@@ -48,6 +48,21 @@
 //	}
 //};
 
+struct pair_hash
+{
+    template <class T1, class T2>
+    size_t operator() (const pair<T1, T2> &pair) const {
+        auto h1 = std::hash<T1>{}(pair.first);
+        auto h2 = std::hash<T2>{}(pair.second);
+        size_t seed = 0;
+        boost::hash_combine(seed, h1);
+        boost::hash_combine(seed, h2);
+        return seed;
+    }
+};
+
+typedef tuple<int, int, int, int, int> Conflict;
+typedef unordered_map<pair<int,int>, list<shared_ptr<Conflict>>, pair_hash> AgentsConflicts;
 class GICBSNode
 {
 public:
@@ -116,10 +131,12 @@ public:
     };
 
     GICBSNode* parent;
+    map<int, list<int>> meta_agents;
     //vector<MDD*> mdds;
     //vector<std::shared_ptr<vector<bool>>> single;
     //vector<std::shared_ptr<vector<PathEntry>>> paths;
-    std::shared_ptr<tuple<int, int, int, int, int>> conflict;
+    std::shared_ptr<Conflict> conflict;
+    AgentsConflicts conflicts;
     int agent_id;
     //std::shared_ptr<tuple<int, int, int, bool>> constraint; // <int loc1, int loc2, int timestep, bool positive_constraint> NOTE loc2 = -1 for vertex constraint; loc2 = loation2 for Edge Constraint
     tuple<int, int, int, bool> constraint; // <int loc1, int loc2, int timestep, bool positive_constraint> NOTE loc2 = -1 for vertex constraint; loc2 = loation2 for Edge Constraint
@@ -153,4 +170,3 @@ public:
     void clear();
     //~GICBSNode();
 };
-

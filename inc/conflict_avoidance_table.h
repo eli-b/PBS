@@ -19,10 +19,8 @@ public:
 
     //ConflictAvoidanceTable(const ConflictAvoidanceTable& other) : toward_goal(other.toward_goal), at_goal(other.at_goal) {}
 
-    ConflictAvoidanceTable(ConflictAvoidanceTable&& other) :
-        toward_goal(std::move(other.toward_goal)), at_goal(std::move(other.at_goal)),
-        moves_offset(other.moves_offset)
-        {}
+    ConflictAvoidanceTable(ConflictAvoidanceTable&& other) : moves_offset(other.moves_offset),
+        toward_goal(std::move(other.toward_goal)), at_goal(std::move(other.at_goal)) {}
 
     XytHolder<AvoidanceState> toward_goal;  // maps location+time pairs to their avoidance state.
     std::unordered_map<int, int> at_goal;  // Maps locations to when agents reach them and never leave (because the location is their goal)
