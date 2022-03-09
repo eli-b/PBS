@@ -94,7 +94,7 @@ int main(int argc, char** argv)
                  "#pathfinding," <<
                  "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime,"
                  "updatecons runtime,updatepaths runtime," <<
-                 "orig agent failed,another agent failed,solver name,instance name,#agents" << endl;
+                 "orig agent failed,another agent failed,solver name,instance name,#agents,max_ma_size" << endl;
         addHeads.close();
     }
     ofstream stats;
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
           icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_updatecons / CLOCKS_PER_SEC << "," <<
           icbs.runtime_updatepaths / CLOCKS_PER_SEC << "," <<
           icbs.agent_itself_failed << "," << icbs.lower_priority_agent_failed <<
-          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << endl;
+          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << "," << icbs.max_ma_size << endl;
     stats.close();
 
     if (res)

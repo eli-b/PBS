@@ -39,6 +39,7 @@ public:
     double focal_w = 1.0;
     double min_f_val;
     double focal_list_threshold;
+    size_t max_ma_size=0;
 
     const bool* my_map;
     int map_size;
@@ -67,6 +68,8 @@ public:
     bool findPathForSingleAgent(GICBSNode* node, int ag, double lowerbound = 0);
 
     bool generateChild(GICBSNode* child, GICBSNode* curr);
+
+    set<int> findMetaAgent(const GICBSNode& curr, int ag, size_t size_th=SIZE_MAX);
 
     inline void updatePaths(GICBSNode* curr);
 

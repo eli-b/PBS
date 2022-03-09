@@ -1,14 +1,14 @@
 #!/bin/bash
 echo "Running Experiments: PBS"
 
-# name="random-32-32-20"
-name="den520d"
+name="Berlin_1_256"
+# name="den520d"
 map="/home/rdaneel/mapf_benchmark/mapf-map/$name.map"
 scen1="even"
 scen="/home/rdaneel/mapf_benchmark/scen-$scen1/$name-$scen1"
 output="/home/rdaneel/my_exp/$name/PBS0/$name-$scen1"
 
-for n in $(seq 200 200 800)
+for n in $(seq 50 50 200)
 do
     for i in $(seq 1 1 25)
     do

@@ -419,6 +419,37 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     return true;
 }
 
+set<int> GICBSSearch::findMetaAgent(const GICBSNode& curr, int ag, size_t size_th)
+{
+    // Use DFS to find the connected component
+    // TODO: memorize the meta-agent in the curr node
+    set<int> ma;
+    vector<int> is_visited(num_of_agents, false);
+    list<int> open_list = list<int>({ag});
+    is_visited[ag] = true;
+    while(!open_list.empty())
+    {
+        int cur_ag = open_list.front();
+        ma.insert(cur_ag);
+        if (ma.size() == size_th)
+            break;
+        open_list.pop_front();
+        for (int a2 = 0; a2 < num_of_agents; a2++)
+        {
+            if(((curr.trans_priorities[cur_ag][a2] && !curr.trans_priorities[a2][cur_ag]) || 
+                (curr.trans_priorities[a2][cur_ag] && !curr.trans_priorities[cur_ag][a2])) && 
+                !is_visited[a2])
+            {
+                assert(find(ma.begin(), ma.end(), a2) == ma.end());
+                is_visited[a2] = true;
+                open_list.push_front(a2);
+            }
+        }
+    }
+    // ma.sort();
+    return ma;
+}
+
 
 void GICBSSearch::printPaths() const
 {
@@ -487,10 +518,20 @@ bool GICBSSearch::runGICBSSearch()
         runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
         if (runtime > TIME_LIMIT || HL_num_expanded > 1000000)
         {  // timeout after 1 minutes or 1000000 expanded nodes
+
+            size_t max_size = 0;
+            for (int tmp_a = 0; tmp_a < num_of_agents; tmp_a++)
+            {
+                set<int> tmp_ma = findMetaAgent(*curr, tmp_a);
+                if (tmp_ma.size() > max_size)
+                    max_size = tmp_ma.size();
+            }
+            max_ma_size = max_size;
+
             cout << "TIMEOUT; cost=" << solution_cost << "; solution delta=" << min_f_val - dummy_start->g_val <<
                  "; {HL,LL}x{expanded,generated}=" << HL_num_expanded << ", " << HL_num_generated <<
                  ", " << LL_num_expanded << ", " << LL_num_generated <<
-                 "; runtime=" << runtime / CLOCKS_PER_SEC << " ; " << endl;
+                 "; runtime=" << runtime / CLOCKS_PER_SEC << " ; max_ma_size=" << max_ma_size << endl;
 
             std::cout << "	Runtime summary: lowlevel = " << runtime_lowlevel / CLOCKS_PER_SEC << " ; listoperation = "
                       << runtime_listoperation / CLOCKS_PER_SEC <<
@@ -555,11 +596,21 @@ bool GICBSSearch::runGICBSSearch()
             runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
             solution_found = true;
             solution_cost = curr->g_val;
+            
+            size_t max_size = 0;
+            for (int tmp_a = 0; tmp_a < num_of_agents; tmp_a++)
+            {
+                set<int> tmp_ma = findMetaAgent(*curr, tmp_a);
+                if (tmp_ma.size() > max_size)
+                    max_size = tmp_ma.size();
+            }
+            max_ma_size = max_size;
+
             cout << "cost=" << solution_cost << "; solution delta=" << solution_cost - dummy_start->g_val <<
                  "; #pathfinding=" << num_single_pathfinding <<
                  "; {HL,LL}x{expanded,generated}=" << HL_num_expanded << ", " << HL_num_generated <<
-                 ", " << LL_num_expanded << ", " << LL_num_generated << "; runtime=" << runtime / CLOCKS_PER_SEC <<
-                 endl;
+                 ", " << LL_num_expanded << ", " << LL_num_generated << "; runtime=" << runtime / CLOCKS_PER_SEC << 
+                 "; max_size=" << max_ma_size << endl;
 //#ifdef DEBUG
 //			int numCollidingPairs = countCollidingPairs();
 //			if (numCollidingPairs > 0)
