@@ -965,10 +965,20 @@ bool GICBSSearch::runGICBSSearch()
         runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
         if (runtime > TIME_LIMIT || HL_num_expanded > 1000000)
         {  // timeout after 1 minutes or 1000000 expanded nodes
+
+            size_t max_size = 0;
+            for (int tmp_a = 0; tmp_a < num_of_agents; tmp_a++)
+            {
+                set<int> tmp_ma = findMetaAgent(*curr, tmp_a);
+                if (tmp_ma.size() > max_size)
+                    max_size = tmp_ma.size();
+            }
+            max_ma_size = max_size;
+
             cout << "TIMEOUT; cost=" << solution_cost << "; solution delta=" << min_f_val - dummy_start->g_val <<
                  "; {HL,LL}x{expanded,generated}=" << HL_num_expanded << ", " << HL_num_generated <<
                  ", " << LL_num_expanded << ", " << LL_num_generated <<
-                 "; runtime=" << runtime / CLOCKS_PER_SEC << " ; " << endl;
+                 "; runtime=" << runtime / CLOCKS_PER_SEC << " ; max_ma_size=" << max_ma_size << endl;
 
             std::cout << "	Runtime summary: lowlevel = " << runtime_lowlevel / CLOCKS_PER_SEC << " ; listoperation = "
                       << runtime_listoperation / CLOCKS_PER_SEC <<
@@ -1035,11 +1045,21 @@ bool GICBSSearch::runGICBSSearch()
             runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
             solution_found = true;
             solution_cost = curr->g_val;
+
+            size_t max_size = 0;
+            for (int tmp_a = 0; tmp_a < num_of_agents; tmp_a++)
+            {
+                set<int> tmp_ma = findMetaAgent(*curr, tmp_a);
+                if (tmp_ma.size() > max_size)
+                    max_size = tmp_ma.size();
+            }
+            max_ma_size = max_size;
+
             cout << "cost=" << solution_cost << "; solution delta=" << solution_cost - dummy_start->g_val <<
                  "; #pathfinding=" << num_single_pathfinding <<
                  "; {HL,LL}x{expanded,generated}=" << HL_num_expanded << ", " << HL_num_generated <<
                  ", " << LL_num_expanded << ", " << LL_num_generated << "; runtime=" << runtime / CLOCKS_PER_SEC <<
-                 endl;
+                 "; max_size=" << max_ma_size << endl;
 //#ifdef DEBUG
 //			int numCollidingPairs = countCollidingPairs();
 //			if (numCollidingPairs > 0)

@@ -39,6 +39,7 @@ public:
     double focal_w = 1.0;
     double min_f_val;
     double focal_list_threshold;
+    size_t max_ma_size;
 
     const bool* my_map;
     int map_size;
