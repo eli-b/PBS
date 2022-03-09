@@ -571,7 +571,7 @@ void GICBSSearch::findConflicts(GICBSNode& curr)
     case 0:
         findConflictsOri(curr);
         break;
-    case 1:
+    case 2:
         findConflictswithMA(curr);
         break;
     default:

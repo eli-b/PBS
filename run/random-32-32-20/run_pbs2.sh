@@ -12,6 +12,6 @@ do
     for i in $(seq 1 1 25)
     do
         echo "$n agents on instance $name-$scen1-$i"
-        ../../build/PBS -m $map -a $scen-$i.scen -k $n -f false -c 1 -o $output-$n-PBS2.csv
+        ../../build/PBS -m $map -a $scen-$i.scen -k $n -f false -c 2 -o $output-$n-PBS2.csv
     done
 done

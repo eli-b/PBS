@@ -71,7 +71,6 @@ public:
     {
         bool operator()(const GICBSNode* n1, const GICBSNode* n2) const
         {
-            return n1->depth <= n2->depth;  // This is a max heap, so this means we prefer HIGHER depth nodes come out of the heap FIRST.
             if (n1->depth == n2->depth)
             {
                 if (n1->f_val == n2->f_val)
@@ -89,7 +88,7 @@ public:
                 }
                 return n1->f_val >= n2->f_val;
             }
-            return n1->depth <= n2->depth;
+            return n1->depth <= n2->depth;  // This is a max heap, so this means we prefer HIGHER depth nodes come out of the heap FIRST.
         }
     };  // used by OPEN to compare nodes by sum_min_f_vals (top of the heap has min sum_min_f_vals)
 
