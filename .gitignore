@@ -2,4 +2,4 @@ cmake*
 .idea
 build
 result_debug.csv
-iteration_data.txt
+iteration_data*

@@ -82,8 +82,8 @@ public:
 
     bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
     shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, size_t start_t=0);
-    void findNodeConflicts(GICBSNode& curr, uint64_t num);
-    void findNodeConflicts(GICBSNode& curr);
+    void findConflictsOri(GICBSNode& curr);
+    void findConflictswithMA(GICBSNode& curr);
     void findConflicts(GICBSNode& curr);
     bool isCollide(const GICBSNode& curr, int a1, int a2);
     void selectConflict(GICBSNode& curr);

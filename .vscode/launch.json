@@ -18,7 +18,8 @@
                 "-o${workspaceFolder}/result_debug.csv", 
                 "-k150",
                 "-f", "false",
-                "-d", "1"
+                "-d", "1",
+                "-c", "1"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

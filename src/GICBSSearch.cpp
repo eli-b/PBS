@@ -227,7 +227,7 @@ void GICBSSearch::copyConflicts(const AgentsConflicts& conflicts, AgentsConflict
     return;
 }
 
-void GICBSSearch::findNodeConflicts(GICBSNode& curr)
+void GICBSSearch::findConflictswithMA(GICBSNode& curr)
 {
     if (curr.parent == nullptr)
     {
@@ -546,12 +546,21 @@ set<int> GICBSSearch::findMetaAgent(const GICBSNode& curr, int ag, size_t size_t
     return ma;
 }
 
-void GICBSSearch::findNodeConflicts(GICBSNode& curr, uint64_t num)
+void GICBSSearch::findConflictsOri(GICBSNode& curr)
 {
-    curr.conflict = NULL;  // Initialize the conflict pointer to nullptr
+    curr.conflict = nullptr;  // Initialize the conflict pointer to nullptr
     for (int a1 = 0; a1 < num_of_agents; a1++)
+    {
         for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
-            findAgentsConflicts(curr, a1, a2, num);
+        {
+            shared_ptr<Conflict> tmp_conf = findEarliestConflict(curr, a1, a2);
+            if (tmp_conf != nullptr)
+            {
+                curr.conflict = tmp_conf;
+                return;
+            }
+        }
+    }
     return;
 }
 
@@ -560,10 +569,10 @@ void GICBSSearch::findConflicts(GICBSNode& curr)
     switch (conf_select_mode)
     {
     case 0:
-        findNodeConflicts(curr, 1);
+        findConflictsOri(curr);
         break;
     case 1:
-        findNodeConflicts(curr);
+        findConflictswithMA(curr);
         break;
     default:
         break;
