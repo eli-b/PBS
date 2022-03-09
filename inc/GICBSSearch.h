@@ -49,7 +49,8 @@ public:
     int num_col;
     AgentsLoader al;
     set<int> all_agents;
-
+    int screen;
+    int conf_select_mode;
 
     uint64_t num_single_pathfinding = 0;
 
@@ -57,6 +58,10 @@ public:
     uint64_t HL_num_generated = 0;
     uint64_t LL_num_expanded = 0;
     uint64_t LL_num_generated = 0;
+
+    std::shared_ptr<vector<uint64_t>> br_node_idx;
+    std::shared_ptr<vector<int>> br_node_soc;
+    std::shared_ptr<vector<size_t>> br_max_ma_size;
 
     GICBSNode* dummy_start;
 
@@ -77,8 +82,8 @@ public:
 
     bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
     shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, size_t start_t=0);
-
-    void findConflicts(GICBSNode& curr, uint64_t num);
+    void findNodeConflicts(GICBSNode& curr, uint64_t num);
+    void findNodeConflicts(GICBSNode& curr);
     void findConflicts(GICBSNode& curr);
     bool isCollide(const GICBSNode& curr, int a1, int a2);
     void selectConflict(GICBSNode& curr);
@@ -109,8 +114,11 @@ public:
 
     void printConstraints(const GICBSNode* n) const;
 
+    void getBranchEval(GICBSNode* n);
+    void saveEval(void);
+
     GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr, constraint_strategy c,
-                bool fixed_prior = false);
+                bool fixed_prior=false, int scr=0, int mode=0);
 
     ~GICBSSearch();
 };

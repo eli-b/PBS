@@ -227,7 +227,7 @@ void GICBSSearch::copyConflicts(const AgentsConflicts& conflicts, AgentsConflict
     return;
 }
 
-void GICBSSearch::findConflicts(GICBSNode& curr)
+void GICBSSearch::findNodeConflicts(GICBSNode& curr)
 {
     if (curr.parent == nullptr)
     {
@@ -546,13 +546,28 @@ set<int> GICBSSearch::findMetaAgent(const GICBSNode& curr, int ag, size_t size_t
     return ma;
 }
 
-void GICBSSearch::findConflicts(GICBSNode& curr, uint64_t num)
+void GICBSSearch::findNodeConflicts(GICBSNode& curr, uint64_t num)
 {
     curr.conflict = NULL;  // Initialize the conflict pointer to nullptr
     for (int a1 = 0; a1 < num_of_agents; a1++)
         for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
             findAgentsConflicts(curr, a1, a2, num);
     return;
+}
+
+void GICBSSearch::findConflicts(GICBSNode& curr)
+{
+    switch (conf_select_mode)
+    {
+    case 0:
+        findNodeConflicts(curr, 1);
+        break;
+    case 1:
+        findNodeConflicts(curr);
+        break;
+    default:
+        break;
+    }
 }
 
 // Based on the <paths> member. Consider making it take a node parameter.
@@ -1041,7 +1056,7 @@ bool GICBSSearch::runGICBSSearch()
         runtime_conflictdetection += std::clock() - t1;
 
         if (curr->conflict == nullptr) // Fail to find a conflict => no conflicts
-        {  // found a solution (and finish the while look)
+        {   // found a solution (and finish the while loop)
             runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
             solution_found = true;
             solution_cost = curr->g_val;
@@ -1075,6 +1090,14 @@ bool GICBSSearch::runGICBSSearch()
                     assert(!isCollide(*curr, a1, a2));
                 }
             }
+
+            // Get branch evaluation
+            if (screen > 0)
+            {
+                getBranchEval(curr);
+                saveEval();
+            }
+
             break;
         }
 
@@ -1311,9 +1334,17 @@ bool GICBSSearch::runGICBSSearch()
 
 
 GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr,
-                         constraint_strategy c, bool fixed_prior) : fixed_prior(fixed_prior), focal_w(f_w)
+                         constraint_strategy c, bool fixed_prior, int scr, int mode) : 
+                         fixed_prior(fixed_prior), focal_w(f_w), screen(scr), conf_select_mode(mode)
 {
     clock_t start_t = std::clock();
+
+    if (screen > 0)
+    {
+        br_max_ma_size = make_shared<vector<size_t>>();
+        br_node_soc = make_shared<vector<int>>();
+        br_node_idx = make_shared<vector<uint64_t>>();
+    }
 
     cons_strategy = c;
     //focal_w = f_w;
@@ -1500,4 +1531,53 @@ GICBSSearch::~GICBSSearch()
     // releaseOpenListNodes();
     //delete (empty_node);
     //delete (deleted_node);
+}
+
+void GICBSSearch::getBranchEval(GICBSNode* n)
+{
+    uint node_cnt = 0;
+    while (n != nullptr)
+    {
+        size_t br_max_size=0;
+        for (int ag=0; ag<num_of_agents; ag++)
+        {
+            size_t tmp_size = findMetaAgent(*n, ag).size();
+            if (tmp_size > br_max_size)
+                br_max_size = tmp_size;
+        }
+        br_max_ma_size->push_back(br_max_size);
+        br_node_idx->push_back(n->time_generated);
+        br_node_soc->push_back(n->g_val);
+
+        n = n->parent;
+        node_cnt ++;
+    }
+
+    // Reverse
+    std::reverse(br_max_ma_size->begin(), br_max_ma_size->end());
+    std::reverse(br_node_idx->begin(), br_node_idx->end());
+    std::reverse(br_node_soc->begin(), br_node_soc->end());
+    return;
+}
+
+void GICBSSearch::saveEval(void)
+{
+    ofstream stats;
+	stats.open("iteration_data.txt", std::ios::out);
+	if (!stats.is_open())
+	{
+		cout << "Failed to open file." << endl;
+	}
+	else
+	{
+        stats << "br_node_idx,";
+		std::copy(br_node_idx->begin(), br_node_idx->end(), std::ostream_iterator<double>(stats, ","));
+		stats << endl;
+		stats << "br_node_soc,";
+		std::copy(br_node_soc->begin(), br_node_soc->end(), std::ostream_iterator<int>(stats, ","));
+		stats << endl;
+		stats << "br_max_ma_size,";
+		std::copy(br_max_ma_size->begin(), br_max_ma_size->end(), std::ostream_iterator<double>(stats, ","));
+		stats << endl;
+    }
 }

@@ -37,6 +37,8 @@ int main(int argc, char** argv)
             ("output,o", po::value<std::string>()->required(), "output file for schedule")
             ("agentNum,k", po::value<int>()->default_value(0), "number of agents")
             ("seed,s", po::value<int>()->default_value(123), "random seed")
+            ("debug,d", po::value<int>()->default_value(0), "debug mode (0: Nothing shown, 1: branch analysis)")
+            ("conf,c", po::value<int>()->default_value(0), "conflict select mode (0:original, 1:new)")
             ("fixedOrder,f", po::value<bool>()->default_value(true),
              "fixed order. true->Prioritized Search, false->PBS");
 
@@ -62,7 +64,9 @@ int main(int argc, char** argv)
     EgraphReader egr;
 
     bool fixed_prior = vm["fixedOrder"].as<bool>();
-    GICBSSearch icbs(ml, al, 1.0, egr, constraint_strategy::ICBS, fixed_prior);
+    int scr = vm["debug"].as<int>();
+    int conf_mode = vm["conf"].as<int>();
+    GICBSSearch icbs(ml, al, 1.0, egr, constraint_strategy::ICBS, fixed_prior, scr, conf_mode);
     bool res;
     res = icbs.runGICBSSearch();
 
@@ -108,7 +112,7 @@ int main(int argc, char** argv)
           icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_updatecons / CLOCKS_PER_SEC << "," <<
           icbs.runtime_updatepaths / CLOCKS_PER_SEC << "," <<
           icbs.agent_itself_failed << "," << icbs.lower_priority_agent_failed <<
-          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << icbs.max_ma_size << endl;
+          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << "," << icbs.max_ma_size << endl;
     stats.close();
 
     if (res)

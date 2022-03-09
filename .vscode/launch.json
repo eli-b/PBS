@@ -1,0 +1,46 @@
+
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) PBS",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/PBS",
+            "args": [
+                // "-m/home/rdaneel/mapf_benchmark/mapf-map/random-32-32-20.map",
+                // "-a/home/rdaneel/mapf_benchmark/scen-even/random-32-32-20-even-9.scen", 
+                "-m/home/rdaneel/mapf_benchmark/mapf-map/den520d.map",
+                "-a/home/rdaneel/mapf_benchmark/scen-even/den520d-even-14.scen", 
+                "-o${workspaceFolder}/result_debug.csv", 
+                "-k150",
+                "-f", "false",
+                "-d", "1"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Python: data_processor",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/script/data_processor.py",
+            // "program": "${workspaceFolder}/script/plot_ins_upperbound.py",
+            "args": ["--config", "${workspaceFolder}/script/config.yaml"],
+            "console": "integratedTerminal"
+        }
+    ]
+}

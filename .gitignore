@@ -1,5 +1,5 @@
 cmake*
 .idea
 build
-.vscode
 result_debug.csv
+iteration_data.txt
