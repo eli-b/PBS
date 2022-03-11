@@ -84,6 +84,8 @@ public:
     shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, size_t start_t=0);
     void findConflictsOri(GICBSNode& curr);
     void findConflictswithMA(GICBSNode& curr);
+    void findConflictswithMaxMA(GICBSNode& curr, bool internal_first=true);
+    void findConflictsRandom(GICBSNode& curr);
     void findConflicts(GICBSNode& curr);
     bool isCollide(const GICBSNode& curr, int a1, int a2);
     void selectConflict(GICBSNode& curr);
