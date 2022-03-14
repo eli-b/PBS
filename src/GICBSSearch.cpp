@@ -34,36 +34,44 @@ inline void GICBSSearch::updatePaths(GICBSNode* curr)
 void GICBSSearch::findConflicts(GICBSNode& curr)
 {
     //vector<bool> hasConflicts(num_of_agents, false);
+    vector<int> new_ag;
+    for (int i = 0; i < num_of_agents; i++)
+        new_ag.push_back(i);
+    random_shuffle(new_ag.begin(), new_ag.end());
+
     for (int a1 = 0; a1 < num_of_agents; a1++)
     {
         for (int a2 = a1 + 1; a2 < num_of_agents; a2++)
         {
-            size_t min_path_length = paths[a1]->size() < paths[a2]->size() ? paths[a1]->size() : paths[a2]->size();
+            int tmp_a1 = new_ag[a1];
+            int tmp_a2 = new_ag[a2];
+
+            size_t min_path_length = paths[tmp_a1]->size() < paths[tmp_a2]->size() ? paths[tmp_a1]->size() : paths[tmp_a2]->size();
             for (size_t timestep = 0; timestep < min_path_length; timestep++)
             {
-                int loc1 = paths[a1]->at(timestep).location;
-                int loc2 = paths[a2]->at(timestep).location;
+                int loc1 = paths[tmp_a1]->at(timestep).location;
+                int loc2 = paths[tmp_a2]->at(timestep).location;
                 if (loc1 == loc2)
                 {
-                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1, a2, loc1, -1, timestep);
+                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(tmp_a1, tmp_a2, loc1, -1, timestep);
                     return;
                     //hasConflicts[a1] = true;
                     //hasConflicts[a2] = true;
                 }
                 else if (timestep < min_path_length - 1
-                         && loc1 == paths[a2]->at(timestep + 1).location
-                         && loc2 == paths[a1]->at(timestep + 1).location)
+                         && loc1 == paths[tmp_a2]->at(timestep + 1).location
+                         && loc2 == paths[tmp_a1]->at(timestep + 1).location)
                 {
-                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(a1, a2, loc1, loc2, timestep + 1);
+                    curr.conflict = std::make_shared<tuple<int, int, int, int, int>>(tmp_a1, tmp_a2, loc1, loc2, timestep + 1);
                     //hasConflicts[a1] = true;
                     //hasConflicts[a2] = true;
                     return;
                 }
             }
-            if (paths[a1]->size() != paths[a2]->size())
+            if (paths[tmp_a1]->size() != paths[tmp_a2]->size())
             {
-                int a1_ = paths[a1]->size() < paths[a2]->size() ? a1 : a2;
-                int a2_ = paths[a1]->size() < paths[a2]->size() ? a2 : a1;
+                int a1_ = paths[tmp_a1]->size() < paths[tmp_a2]->size() ? tmp_a1 : tmp_a2;
+                int a2_ = paths[a1]->size() < paths[tmp_a2]->size() ? tmp_a2 : tmp_a1;
                 int loc1 = paths[a1_]->back().location;
                 for (size_t timestep = min_path_length; timestep < paths[a2_]->size(); timestep++)
                 {
