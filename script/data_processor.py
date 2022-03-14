@@ -43,6 +43,11 @@ class DataProcessor:
                                         '#high-level generated': '# CT nodes',
                                         'runtime of solving MVC': 'runtime (sec)',
                                         'max_ma_size': 'Max MA size',
+                                        '#low-level generated': '# LL nodes (M)',
+                                        '#low-level expanded': '# LL nodes (M)',
+                                        '#high-level generated': '# HL nodes',
+                                        '#high-level expanded': '# HL nodes',
+                                        '#pathfinding': '# Replan',
                                         'flex': '$\Delta$'}
         self.x_labels:Dict[str,str] = {'num': 'Number of agents',
                                        'ins': 'Instance',
@@ -281,18 +286,30 @@ class DataProcessor:
             in_axs.axes.set_yticks(y_list)
         elif y_index == 'runtime':
             # y_list = range(0, 61, 10)
-            # y_list = range(0, 46, 5)
-            # y_list = range(0, 36, 5)
-            y_list = range(0, 11, 2)
-            # y_list = range(0, 17, 2)
+            y_list = range(0, 32, 5)
+            # y_list = range(0, 26, 5)
             # y_list = range(0, 13, 2)
-            # y_list = range(0, 5, 1)
+            # y_list = range(0, 6, 1)
             in_axs.axes.set_yticks(y_list)
         elif y_index == '#findPathForSingleAgent':
-            y_list = np.arange(min(y_list), max(y_list)+5, 1000)
-            y_list = np.delete(y_list, 0)
             in_axs.axes.set_yticks(y_list)
-            y_list = [str(int(y//1000)) for y in y_list]
+        elif y_index == '#low-level generated':
+            scale = 1000000
+            label_scale = 1000000
+            y_list = np.arange(0, max(y_list)+5, scale)
+            # y_list = np.arange(0, max(y_list)+5, scale)
+            # y_list = np.delete(y_list, 0)
+            # y_list = np.delete(y_list, 0)
+            # y_list = np.delete(y_list, -1)
+            # y_list = np.delete(y_list, -1)
+            in_axs.axes.set_yticks(y_list)
+            y_list = [str(int(y/label_scale)) for y in y_list]
+        elif y_index == '#high-level generated':
+            # y_list = np.arange(min(y_list), max(y_list)+5, 1000)
+            # y_list = np.delete(y_list, 0)
+            # in_axs.axes.set_yticks(y_list)
+            # y_list = [str(int(y//1000)) for y in y_list]
+            y_list = [str(int(y)) for y in y_list]
 
         in_axs.yaxis.grid()
         in_axs.axes.set_yticklabels(y_list, fontsize=self.text_size)
@@ -477,10 +494,12 @@ if __name__ == '__main__':
 
     # Create data processor
     data_processor = DataProcessor(args.config)
-    # data_processor.plot_fig()
     # data_processor.plot_fig(x_index='num', y_index='succ')
-    # data_processor.plot_fig(x_index='num', y_index='runtime')
+    data_processor.plot_fig(x_index='num', y_index='runtime')
     # data_processor.plot_fig(x_index='num', y_index='max_ma_size')
-    # data_processor.plot_fig(x_index='ins', y_index='runtime')
-    data_processor.plot_fig(x_index='ins', y_index='solution cost')
-    # data_processor.plot_fig3()
+    # data_processor.plot_fig(x_index='ins', y_index='solution cost')
+    # data_processor.plot_fig(x_index='ins', y_index='max_ma_size')
+    data_processor.plot_fig(x_index='num', y_index='#low-level generated')
+    # data_processor.plot_fig(x_index='num', y_index='#low-level expanded')
+    data_processor.plot_fig(x_index='num', y_index='#high-level generated')
+    # data_processor.plot_fig(x_index='num', y_index='#pathfinding')

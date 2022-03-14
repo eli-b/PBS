@@ -130,12 +130,11 @@ public:
     };
 
     GICBSNode* parent;
-    map<int, list<int>> meta_agents;
     //vector<MDD*> mdds;
     //vector<std::shared_ptr<vector<bool>>> single;
     //vector<std::shared_ptr<vector<PathEntry>>> paths;
     std::shared_ptr<Conflict> conflict;
-    AgentsConflicts conflicts;
+    // AgentsConflicts conflicts;
     int agent_id;
     //std::shared_ptr<tuple<int, int, int, bool>> constraint; // <int loc1, int loc2, int timestep, bool positive_constraint> NOTE loc2 = -1 for vertex constraint; loc2 = loation2 for Edge Constraint
     tuple<int, int, int, bool> constraint; // <int loc1, int loc2, int timestep, bool positive_constraint> NOTE loc2 = -1 for vertex constraint; loc2 = loation2 for Edge Constraint
@@ -158,6 +157,11 @@ public:
     //vector<std::shared_ptr<vector<bool>>> inferiorities;
     vector<vector<bool>> priorities;
     vector<vector<bool>> trans_priorities;
+
+    // // This is for centering conflict selection
+    // list<int> agent_list;
+    // vector<bool> is_ag_inlist;
+    // vector<bool> ag_conflict_free;
 
     //bool buildMDD(const vector < list< pair<int, int> > >& constraints, int numOfLevels);
     //bool updateMDD(const tuple<int, int, int> &constraint);

@@ -58,6 +58,12 @@ public:
     uint64_t HL_num_generated = 0;
     uint64_t LL_num_expanded = 0;
     uint64_t LL_num_generated = 0;
+    uint64_t num_total_conf = 0;
+    uint64_t num_ex_conf = 0;
+    uint64_t num_in_conf = 0;
+    uint64_t num_0child = 0;
+    uint64_t num_1child = 0;
+    uint64_t num_2child = 0;
 
     std::shared_ptr<vector<uint64_t>> br_node_idx;
     std::shared_ptr<vector<int>> br_node_soc;
@@ -77,15 +83,20 @@ public:
 
     inline void updatePaths(GICBSNode* curr);
 
-    void copyConflicts(const AgentsConflicts& conflicts, AgentsConflicts& copy, 
-        const set<int>& excluded_agents);
+    // void copyConflicts(const AgentsConflicts& conflicts, AgentsConflicts& copy, 
+    //     const set<int>& excluded_agents);
 
-    bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
-    shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, size_t start_t=0);
+    // bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
+    shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, 
+        size_t start_t=0, size_t end_t=SIZE_MAX);
     void findConflictsOri(GICBSNode& curr);
-    void findConflictswithMA(GICBSNode& curr);
+    void findConflictsminTimestep(GICBSNode& curr);
+    void findConflictsminTimestepEval(GICBSNode& curr);
+    void findConflictswithMinMA(GICBSNode& curr);
     void findConflictswithMaxMA(GICBSNode& curr, bool internal_first=true);
+    void findConflictsCenter(GICBSNode& curr);
     void findConflictsRandom(GICBSNode& curr);
+    void findConflictsRandomEval(GICBSNode& curr);
     void findConflicts(GICBSNode& curr);
     bool isCollide(const GICBSNode& curr, int a1, int a2);
     void selectConflict(GICBSNode& curr);

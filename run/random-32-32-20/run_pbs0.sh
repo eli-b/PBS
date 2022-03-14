@@ -3,11 +3,11 @@ echo "Running Experiments: PBS0"
 
 name="random-32-32-20"
 map="/home/rdaneel/mapf_benchmark/mapf-map/$name.map"
-scen1="random"
+scen1="even"
 scen="/home/rdaneel/mapf_benchmark/scen-$scen1/$name-$scen1"
 output="/home/rdaneel/my_exp/$name/PBS0/$name-$scen1"
 
-for n in $(seq 140 20 140)
+for n in $(seq 20 20 120)
 do
     for i in $(seq 1 1 25)
     do

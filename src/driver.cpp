@@ -36,7 +36,7 @@ int main(int argc, char** argv)
             ("agents,a", po::value<std::string>()->required(), "input file for agents")
             ("output,o", po::value<std::string>()->required(), "output file for schedule")
             ("agentNum,k", po::value<int>()->default_value(0), "number of agents")
-            ("seed,s", po::value<int>()->default_value(123), "random seed")
+            ("seed,s", po::value<int>()->default_value(0), "random seed")
             ("debug,d", po::value<int>()->default_value(0), "debug mode (0: Nothing shown, 1: branch analysis)")
             ("conf,c", po::value<int>()->default_value(0), "conflict select mode (0:original, 2:new)")
             ("fixedOrder,f", po::value<bool>()->default_value(true),
@@ -98,7 +98,9 @@ int main(int argc, char** argv)
                  "#pathfinding," <<
                  "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime,"
                  "updatecons runtime,updatepaths runtime," <<
-                 "orig agent failed,another agent failed,solver name,instance name,#agents,max_ma_size" << endl;
+                 "orig agent failed,another agent failed,solver name,instance name,"
+                 "#agents,max_ma_size,num_ex_conf,num_in_conf,num_total_conf,"
+                 "num_0child,num_1child,num_2child" << endl;
         addHeads.close();
     }
     ofstream stats;
@@ -112,7 +114,9 @@ int main(int argc, char** argv)
           icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_updatecons / CLOCKS_PER_SEC << "," <<
           icbs.runtime_updatepaths / CLOCKS_PER_SEC << "," <<
           icbs.agent_itself_failed << "," << icbs.lower_priority_agent_failed <<
-          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << "," << icbs.max_ma_size << endl;
+          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << "," << 
+          icbs.max_ma_size << "," << icbs.num_ex_conf << "," << icbs.num_in_conf << "," << icbs.num_total_conf << "," <<
+          icbs.num_0child << "," << icbs.num_1child << "," << icbs.num_2child << endl;
     stats.close();
 
     if (res)
