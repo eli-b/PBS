@@ -1,4 +1,5 @@
-exp_path: "/home/rdaneel/my_exp/"
+exp_path: "/home/rdaneel/my_exp_socs2022/"
+# exp_path: "/home/rdaneel/my_exp/"
 ins_num: 25
 time_limit: 60
 plot_ci: false
@@ -40,7 +41,6 @@ maps:
   #     - 40
   #     - 50
   #     - 60
-  #     - 70
 
   # - name: "room-32-32-4"
   #   label: Room
@@ -69,25 +69,25 @@ solvers:
   #   color: "deepskyblue"
   #   marker: "o"
   
-  - name: "PBS1a"
-    label: "PBS(First)"
-    color: "deepskyblue"
-    marker: "o"
+  # - name: "PBS1a"
+  #   label: "PBS(First)"
+  #   color: "blue"
+  #   marker: "o"
   
-  # - name: "PBS6"
-  #   label: "PBS(Earliest)"
-  #   color: 'purple'
-  #   marker: 'd'
-
-  - name: "PBS6a"
+  - name: "PBS6"
     label: "PBS(Earliest)"
     color: 'purple'
     marker: 'd'
 
-  # - name: "PBS2"
-  #   label: "PBS(Smallest)"
-  #   color: 'green'
-  #   marker: 's'
+  # - name: "PBS6a"
+  #   label: "PBS(Earliest)"
+  #   color: 'purple'
+  #   marker: 'd'
+
+  - name: "PBS2"
+    label: "PBS(Smallest)"
+    color: 'green'
+    marker: 's'
 
   # - name: "PBS4"
   #   label: "PBS(Largest w/o Internal first)"

@@ -1,4 +1,5 @@
-exp_path: "/home/rdaneel/my_exp/"
+exp_path: "/home/rdaneel/my_exp_socs2022/"
+# exp_path: "/home/rdaneel/my_exp/"
 ins_num: 50
 time_limit: 60
 plot_ci: false
@@ -72,10 +73,10 @@ solvers:
     color: "deepskyblue"
     marker: "o"
 
-  - name: "PBS1a"
-    label: "PBS(First2)"
-    color: "blue"
-    marker: "o"
+  # - name: "PBS1a"
+  #   label: "PBS(First2)"
+  #   color: "blue"
+  #   marker: "o"
   
   - name: "PBS6"
     label: "PBS(Earliest)"

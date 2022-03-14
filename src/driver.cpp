@@ -36,7 +36,7 @@ int main(int argc, char** argv)
             ("agents,a", po::value<std::string>()->required(), "input file for agents")
             ("output,o", po::value<std::string>()->required(), "output file for schedule")
             ("agentNum,k", po::value<int>()->default_value(0), "number of agents")
-            ("seed,s", po::value<int>()->default_value(0), "random seed")
+            ("seed,s", po::value<int>()->default_value(123), "random seed")
             ("debug,d", po::value<int>()->default_value(0), "debug mode (0: Nothing shown, 1: branch analysis)")
             ("conf,c", po::value<int>()->default_value(0), "conflict select mode (0:original, 2:new)")
             ("fixedOrder,f", po::value<bool>()->default_value(true),

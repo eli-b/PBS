@@ -458,10 +458,22 @@ void GICBSSearch::findConflictswithMinMA(GICBSNode& curr)
             //         << ", " << get<3>(*conf) << ", " << get<4>(*conf) << "> | ";
             // }
             // cout << endl;
-            list<shared_ptr<Conflict>>::iterator cit = min_size_conf.begin();
-            int random = rand() % min_size_conf.size();
-            std::advance(cit, random);
-            curr.conflict = *cit;
+            // list<shared_ptr<Conflict>>::iterator cit = min_size_conf.begin();
+            // int random = rand() % min_size_conf.size();
+            // std::advance(cit, random);
+            // curr.conflict = *cit;
+
+            // Choose the earliest
+            int min_conf_t = INT_MAX;
+            for (const auto& conf : min_size_conf)
+            {
+                if (get<4>(*conf) < min_conf_t)
+                {
+                    curr.conflict = conf;
+                    min_conf_t = get<4>(*conf);
+                }
+            }
+
             num_ex_conf++;
             num_total_conf++;
         }
@@ -577,10 +589,23 @@ void GICBSSearch::findConflictswithMaxMA(GICBSNode& curr, bool internal_first)
 
         if (!min_size_conf.empty())
         {
-            list<shared_ptr<Conflict>>::iterator cit = min_size_conf.begin();
-            int random = rand() % min_size_conf.size();
-            std::advance(cit, random);
-            curr.conflict = *cit;
+            // Choose randomly
+            // list<shared_ptr<Conflict>>::iterator cit = min_size_conf.begin();
+            // int random = rand() % min_size_conf.size();
+            // std::advance(cit, random);
+            // curr.conflict = *cit;
+
+            // Choose the earliest
+            int min_conf_t = INT_MAX;
+            for (const auto& conf : min_size_conf)
+            {
+                if (get<4>(*conf) < min_conf_t)
+                {
+                    curr.conflict = conf;
+                    min_conf_t = get<4>(*conf);
+                }
+            }
+
             num_ex_conf++;
             num_total_conf++;
         }
@@ -1501,7 +1526,17 @@ bool GICBSSearch::runGICBSSearch()
             {
                 for (int a2=a1+1; a2 < num_of_agents; a2++)
                 {
-                    assert(!isCollide(*curr, a1, a2));
+                    if (isCollide(*curr, a1, a2))
+                    {
+                        cout << "=======================" << endl;
+                        cout << endl;
+                        cout << "Solution is invalid!!!" << endl;
+                        cout << endl;
+                        cout << "=======================" << endl;
+                        solution_cost = -2;
+                        solution_found = false;
+                        return solution_found;
+                    }
                 }
             }
 

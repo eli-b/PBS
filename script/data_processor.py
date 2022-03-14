@@ -23,9 +23,9 @@ class DataProcessor:
         # Plot parameters
         self.max_x_num = 5  # on the x-axis
         self.fig_size:Tuple[int,int] = (12, 9) # (17, 8)
-        self.marker_size:int = 15
-        self.line_width:float = 1.8
-        self.text_size:int = 25
+        self.marker_size:int = 25
+        self.line_width:float = 4.0
+        self.text_size:int = 40
         self.fig_axs:Dict[int, Tuple[int,int]] = {1: (1,1),
                                                   2: (1,2),
                                                   3: (1,3),
@@ -34,25 +34,17 @@ class DataProcessor:
                                                   6: (2,3),
                                                   8: (2,4),
                                                   9: (3,3)}
-        self.y_labels:Dict[str, str] = {'succ': 'Success rate',
+        self.y_labels:Dict[str, str] = {'succ': 'Success Rate',
                                         'runtime': 'Runtime (sec)',
-                                        'min f value': 'Lower bound',
-                                        'solution cost': 'Cost',
-                                        'Ratio': 'Ratio',
-                                        '#findPathForSingleAgent': 'Number of v-t nodes (K)',
-                                        '#high-level generated': '# CT nodes',
-                                        'runtime of solving MVC': 'runtime (sec)',
-                                        'max_ma_size': 'Max MA size',
-                                        '#low-level generated': '# LL nodes (M)',
-                                        '#low-level expanded': '# LL nodes (M)',
-                                        '#high-level generated': '# HL nodes',
-                                        '#high-level expanded': '# HL nodes',
-                                        '#pathfinding': '# Replan',
-                                        'flex': '$\Delta$'}
-        self.x_labels:Dict[str,str] = {'num': 'Number of agents',
-                                       'ins': 'Instance',
-                                       'w': 'Suboptimality factor'}
-
+                                        'solution cost': 'SoC',
+                                        'max_ma_size': 'Max MA Size',
+                                        '#low-level generated': '# Generated LL Nodes (M)',
+                                        '#low-level expanded': '# Expanded LL nodes (M)',
+                                        '#high-level generated': '# Generated HL Nodes (K)',
+                                        '#high-level expanded': '# Expanded HL nodes (K)',
+                                        '#pathfinding': '# Replaned Agents'}
+        self.x_labels:Dict[str,str] = {'num': '# Agents',
+                                       'ins': 'Instance'}
 
     def get_subfig_pos(self, f_idx: int):
         """Transfer subplot index to 2-D position
@@ -286,16 +278,17 @@ class DataProcessor:
             in_axs.axes.set_yticks(y_list)
         elif y_index == 'runtime':
             # y_list = range(0, 61, 10)
-            y_list = range(0, 32, 5)
+            # y_list = range(0, 32, 5)
             # y_list = range(0, 26, 5)
             # y_list = range(0, 13, 2)
-            # y_list = range(0, 6, 1)
+            # y_list = range(0, 2, 1)
+            y_list = [0, 0.5, 1.0, 1.5, 2.0]
             in_axs.axes.set_yticks(y_list)
         elif y_index == '#findPathForSingleAgent':
             in_axs.axes.set_yticks(y_list)
         elif y_index == '#low-level generated':
-            scale = 1000000
             label_scale = 1000000
+            scale = label_scale * 0.1
             y_list = np.arange(0, max(y_list)+5, scale)
             # y_list = np.arange(0, max(y_list)+5, scale)
             # y_list = np.delete(y_list, 0)
@@ -303,13 +296,17 @@ class DataProcessor:
             # y_list = np.delete(y_list, -1)
             # y_list = np.delete(y_list, -1)
             in_axs.axes.set_yticks(y_list)
-            y_list = [str(int(y/label_scale)) for y in y_list]
+            y_list = [str(y/label_scale) for y in y_list]
+            # y_list = [str(int(y//label_scale)) for y in y_list]
         elif y_index == '#high-level generated':
-            # y_list = np.arange(min(y_list), max(y_list)+5, 1000)
-            # y_list = np.delete(y_list, 0)
-            # in_axs.axes.set_yticks(y_list)
-            # y_list = [str(int(y//1000)) for y in y_list]
-            y_list = [str(int(y)) for y in y_list]
+            label_scale = 1000
+            scale = label_scale * 0.2
+            y_list = np.arange(0, max(y_list)+5, scale)
+
+            in_axs.axes.set_yticks(y_list)
+            # y_list = [str(int(y)) for y in y_list]
+            y_list = [str(y/label_scale) for y in y_list]
+            # y_list = [str(int(y//label_scale)) for y in y_list]
 
         in_axs.yaxis.grid()
         in_axs.axes.set_yticklabels(y_list, fontsize=self.text_size)
@@ -399,13 +396,12 @@ class DataProcessor:
                 self.subplot_fig(x_index, y_index, axs[frow,fcol], idx, _map_, result)
 
         fig.tight_layout()
-        # fig.tight_layout(rect=[0, 0, 1, 0.98])
-        plt.legend(loc="best", fontsize=self.text_size)
-        # fig.legend(loc="upper center",
-        #            bbox_to_anchor= (0.5, 1.01),
-        #            borderpad=0.25, handletextpad=0.1, labelspacing=0.75, columnspacing=0.75,
-        #            ncol=len(self.config['solvers']),
-        #            fontsize=self.text_size)
+        if y_index == 'succ':
+            plt.legend(loc="lower left", fontsize=self.text_size)
+        elif y_index == 'runtime' or y_index == '#low-level generated' or y_index == '#high-level generated':
+            plt.legend(loc="upper left", fontsize=self.text_size)
+        else:
+            plt.legend(loc="best", fontsize=self.text_size)
         fig_name = x_index + '_' + y_index + '_plot.png'
         plt.savefig(fig_name)
         plt.show()
@@ -494,7 +490,7 @@ if __name__ == '__main__':
 
     # Create data processor
     data_processor = DataProcessor(args.config)
-    # data_processor.plot_fig(x_index='num', y_index='succ')
+    data_processor.plot_fig(x_index='num', y_index='succ')
     data_processor.plot_fig(x_index='num', y_index='runtime')
     # data_processor.plot_fig(x_index='num', y_index='max_ma_size')
     # data_processor.plot_fig(x_index='ins', y_index='solution cost')
