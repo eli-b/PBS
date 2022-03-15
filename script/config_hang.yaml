@@ -3,14 +3,14 @@ exp_path: "/home/rdaneel/my_exp_socs2022/"
 ins_num: 50
 time_limit: 60
 plot_ci: false
+plot_std: false
 
 maps:
-  - name: "20x20"
-    label: Empty $20\times20$ Grid
+  - name: "10obs-20x20"
+    label: $20\times20$ Grid ($10\%$ obstacles)
     scens:
       - hang
     num_of_agents:
-      - 10
       - 20
       - 30
       - 40
@@ -21,12 +21,11 @@ maps:
       - 90
       - 100
 
-  # - name: "10obs-20x20"
-  #   label: $20\times20$ Grid ($10\%$ obstacles)
+  # - name: "20x20"
+  #   label: Empty $20\times20$ Grid
   #   scens:
   #     - hang
   #   num_of_agents:
-  #     - 10
   #     - 20
   #     - 30
   #     - 40
@@ -68,25 +67,30 @@ solvers:
   #   color: "grey"
   #   marker: "P"
   
-  - name: "PBS1"
-    label: "PBS(First)"
-    color: "deepskyblue"
-    marker: "o"
+  # - name: "PBS1"
+  #   label: "PBS(First)"
+  #   color: "purple"
+  #   marker: "d"
 
   # - name: "PBS1a"
-  #   label: "PBS(First2)"
-  #   color: "blue"
-  #   marker: "o"
+  #   label: "PBS(First)"
+  #   color: "purple"
+  #   marker: "d"
   
   - name: "PBS6"
     label: "PBS(Earliest)"
-    color: 'purple'
-    marker: 'd'
+    color: 'deepskyblue'
+    marker: 'o'
 
-  # - name: "PBS2"
-  #   label: "PBS(Smallest)"
-  #   color: 'green'
-  #   marker: 's'
+  # - name: "PBS6a"
+  #   label: "PBS(Earliest)"
+  #   color: 'deepskyblue'
+  #   marker: 'o'
+ 
+  - name: "PBS2"
+    label: "PBS(Smallest)"
+    color: 'green'
+    marker: 's'
 
   # - name: "PBS4"
   #   label: "PBS(Largest w/o Internal first)"

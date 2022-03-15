@@ -3,6 +3,8 @@
 """Data processor"""
 
 import enum
+import logging
+from operator import index
 import os
 import argparse
 from typing import Dict, List, Tuple
@@ -24,7 +26,8 @@ class DataProcessor:
         self.max_x_num = 5  # on the x-axis
         self.fig_size:Tuple[int,int] = (12, 9) # (17, 8)
         self.marker_size:int = 25
-        self.line_width:float = 4.0
+        self.line_width:float = 4.0  # 4.0
+        self.mark_width:float = 4.0  # 4.0
         self.text_size:int = 40
         self.fig_axs:Dict[int, Tuple[int,int]] = {1: (1,1),
                                                   2: (1,2),
@@ -42,7 +45,15 @@ class DataProcessor:
                                         '#low-level expanded': '# Expanded LL nodes (M)',
                                         '#high-level generated': '# Generated HL Nodes (K)',
                                         '#high-level expanded': '# Expanded HL nodes (K)',
-                                        '#pathfinding': '# Replaned Agents'}
+                                        '#pathfinding': '# Replaned Agents (K)',
+                                        'num_in_conf': 'Internal / Total',
+                                        'num_ex_conf': 'External / Total',
+                                        'num_total_conf': '# Total Conflicts (K)',
+                                        'add': 'Sum (K)',
+                                        'sub': 'Subtraction',
+                                        'mul': 'Multiplication',
+                                        'div': '# Replans',
+                                        'mod': 'Mod'}
         self.x_labels:Dict[str,str] = {'num': '# Agents',
                                        'ins': 'Instance'}
 
@@ -73,9 +84,6 @@ class DataProcessor:
             return self.get_ins_val(y_index)
         elif x_index == 'num':
             return self.get_num_val(y_index, is_avg)
-        elif x_index == 'w':
-            return self.get_w_val(y_index, is_avg)
-
 
     def get_ins_val(self, in_index:str='runtime'):
         """Compute the success rate versus the numbers of agents
@@ -101,8 +109,21 @@ class DataProcessor:
                         for _, row in data_frame.iterrows():
                             if in_index == 'runtime':
                                 tmp_val = min(row[in_index], 60)
-                            elif in_index == 'temp':
-                                tmp_val = row['#low-level in focal']/row['#findPathForSingleAgent']
+                            elif in_index == 'num_in_conf':
+                                if row['num_total_conf'] == 0 or row['num_in_conf'] == 0:
+                                    tmp_val = np.inf
+                                else:
+                                    tmp_val = row['num_in_conf']/row['num_total_conf']
+                            elif in_index == 'num_ex_conf':
+                                if row['num_total_conf'] == 0 or row['num_ex_conf'] == 0:
+                                    tmp_val = np.inf
+                                else:
+                                    tmp_val = row['num_ex_conf']/row['num_total_conf']
+                            elif in_index == 'num_total_conf':
+                                if row['num_total_conf'] == 0:
+                                    tmp_val = np.inf
+                                else:
+                                    tmp_val = row['num_total_conf']
                             elif row[in_index] < 0:
                                 tmp_val = np.inf
                             else:
@@ -135,9 +156,11 @@ class DataProcessor:
                     total_num = 0.0
                     _data_:List = list()
                     for scen in _map_['scens']:
+                        tmp_ins_num = 0
                         data_frame = util.get_csv_instance(self.config['exp_path'], _map_['name'],
                                                            scen, ag_num, solver)
                         for _, row in data_frame.iterrows():
+                            tmp_ins_num += 1
                             if in_index == 'succ':
                                 if row['solution cost'] >= 0 and \
                                     row['runtime'] <= self.config['time_limit']:
@@ -145,12 +168,21 @@ class DataProcessor:
                             elif in_index == 'runtime':
                                 _data_.append(min(row[in_index], 60))
                                 total_val += min(row[in_index], 60)
+                            elif in_index == '#high-level generated':
+                                assert row[in_index] > 0
+                                if row[in_index] == 1 and '#pathfinding' in row.index:
+                                    assert row['#pathfinding'] == 0
+                                _data_.append(row[in_index]-1)
+                                total_val += row[in_index]-1
                             else:
                                 assert row[in_index] >= 0
                                 _data_.append(row[in_index])
                                 total_val += row[in_index]
 
                         total_num += self.config['ins_num']
+                        if (tmp_ins_num != self.config['ins_num']):
+                            logging.warning('Ins number does no match at map:%s, scen:%s, ag:%d',
+                                            _map_['name'], scen, ag_num)
 
                     if is_avg:
                         if total_num == 0:
@@ -165,6 +197,9 @@ class DataProcessor:
 
                     if self.config['plot_ci'] and len(_data_) > 0:  # non empty list
                         _ci_ = 1.96*np.std(_data_) / np.sqrt(total_num)  # confident interval
+                        result[solver['name']][_map_['name']]['ci'].append(_ci_)
+                    elif self.config['plot_std'] and len(_data_) > 0:
+                        _ci_ = np.std(_data_)  # standard deviation
                         result[solver['name']][_map_['name']]['ci'].append(_ci_)
 
         return result
@@ -221,7 +256,8 @@ class DataProcessor:
                     result[solver['name']][_map_['name']]['val'].append(_rate_)
 
                     if self.config['plot_ci'] and len(_data_) > 0:  # non empty list
-                        _ci_ = 1.96*np.std(_data_) / np.sqrt(total_num)  # confident interval
+                        # _ci_ = 1.96*np.std(_data_) / np.sqrt(total_num)  # confident interval
+                        _ci_ = np.std(_data_)  # standard deviation
                         result[solver['name']][_map_['name']]['ci'].append(_ci_)
 
                 solver['x'] = default_w
@@ -238,28 +274,47 @@ class DataProcessor:
             _ci_  = in_result[solver['name']][in_map['name']]['ci']
 
             if in_map_idx == 0:
-                in_axs.plot(_num_, _val_,
-                            label=solver['label'],
-                            linewidth=self.line_width,
-                            markerfacecolor='white',
-                            markeredgewidth=self.line_width,
-                            ms=self.marker_size,
-                            color=solver['color'],
-                            marker=solver['marker'])
+                if (self.config['plot_std'] or self.config['plot_ci']) and len(_ci_) > 0:
+                    in_axs.errorbar(_num_, _val_, yerr=_ci_,
+                                    label=solver['label'],
+                                    linewidth=self.line_width,
+                                    markerfacecolor='white',
+                                    markeredgewidth=self.mark_width,
+                                    ms=self.marker_size,
+                                    color=solver['color'],
+                                    marker=solver['marker'])
+                else:
+                    in_axs.plot(_num_, _val_,
+                                label=solver['label'],
+                                linewidth=self.line_width,
+                                markerfacecolor='white',
+                                markeredgewidth=self.mark_width,
+                                ms=self.marker_size,
+                                color=solver['color'],
+                                marker=solver['marker'])
             else:
-                in_axs.plot(_num_, _val_,
-                            linewidth=self.line_width,
-                            markerfacecolor='white',
-                            markeredgewidth=self.line_width,
-                            ms=self.marker_size,
-                            color=solver['color'],
-                            marker=solver['marker'])
+                if (self.config['plot_std'] or self.config['plot_ci']) and len(_ci_) > 0:
+                    in_axs.errorbar(_num_, _val_, yerr=_ci_,
+                                    linewidth=self.line_width,
+                                    markerfacecolor='white',
+                                    markeredgewidth=self.mark_width,
+                                    ms=self.marker_size,
+                                    color=solver['color'],
+                                    marker=solver['marker'])
+                else:
+                    in_axs.plot(_num_, _val_,
+                                linewidth=self.line_width,
+                                markerfacecolor='white',
+                                markeredgewidth=self.mark_width,
+                                ms=self.marker_size,
+                                color=solver['color'],
+                                marker=solver['marker'])
 
-            # Plot confident interval
-            if self.config['plot_ci'] and len(_ci_) > 0:
-                _lb_ = [_val_[i] - _ci_[i] for i in range(len(_val_))]
-                _ub_ = [_val_[i] + _ci_[i] for i in range(len(_val_))]
-                in_axs.fill_between(_num_, _lb_, _ub_, color=solver['color'], alpha=0.2)
+            # # Plot confident interval with fill_between
+            # if self.config['plot_ci'] and len(_ci_) > 0:
+            #     _lb_ = [_val_[i] - _ci_[i] for i in range(len(_val_))]
+            #     _ub_ = [_val_[i] + _ci_[i] for i in range(len(_val_))]
+            #     in_axs.fill_between(_num_, _lb_, _ub_, color=solver['color'], alpha=0.2)
 
         in_axs.set_title(in_map['label'], fontsize=self.text_size)
 
@@ -276,19 +331,24 @@ class DataProcessor:
         if y_index == 'succ':
             y_list = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
             in_axs.axes.set_yticks(y_list)
+
         elif y_index == 'runtime':
-            # y_list = range(0, 61, 10)
-            # y_list = range(0, 32, 5)
-            # y_list = range(0, 26, 5)
-            # y_list = range(0, 13, 2)
+            y_list = range(0, 61, 10)
+            # y_list = range(0, 36, 5)
+            # y_list = range(0, 16, 5)
+            # y_list = range(0, 9, 2)
             # y_list = range(0, 2, 1)
-            y_list = [0, 0.5, 1.0, 1.5, 2.0]
+            # y_list = [0, 0.5, 1.0, 1.5, 2.0]
             in_axs.axes.set_yticks(y_list)
-        elif y_index == '#findPathForSingleAgent':
+
+        elif y_index == 'max_ma_size':
+            y_list = range(0, max(in_map['num_of_agents'])+5, 20)
             in_axs.axes.set_yticks(y_list)
+
         elif y_index == '#low-level generated':
             label_scale = 1000000
-            scale = label_scale * 0.1
+            tmp_range = 2
+            scale = label_scale * tmp_range
             y_list = np.arange(0, max(y_list)+5, scale)
             # y_list = np.arange(0, max(y_list)+5, scale)
             # y_list = np.delete(y_list, 0)
@@ -296,17 +356,63 @@ class DataProcessor:
             # y_list = np.delete(y_list, -1)
             # y_list = np.delete(y_list, -1)
             in_axs.axes.set_yticks(y_list)
-            y_list = [str(y/label_scale) for y in y_list]
-            # y_list = [str(int(y//label_scale)) for y in y_list]
+            
+            if isinstance(tmp_range, float):
+                y_list = [str(y/label_scale) for y in y_list]
+            elif isinstance(tmp_range, int):
+                y_list = [str(int(y//label_scale)) for y in y_list]
+
         elif y_index == '#high-level generated':
             label_scale = 1000
-            scale = label_scale * 0.2
+            tmp_range = 1
+            scale = label_scale * tmp_range
             y_list = np.arange(0, max(y_list)+5, scale)
 
             in_axs.axes.set_yticks(y_list)
-            # y_list = [str(int(y)) for y in y_list]
-            y_list = [str(y/label_scale) for y in y_list]
-            # y_list = [str(int(y//label_scale)) for y in y_list]
+            if isinstance(tmp_range, float):
+                y_list = [str(y/label_scale) for y in y_list]
+            elif isinstance(tmp_range, int):
+                y_list = [str(int(y//label_scale)) for y in y_list]
+
+        elif y_index == '#pathfinding':
+            label_scale = 1000
+            tmp_range = 1
+            scale = label_scale * tmp_range
+            y_list = np.arange(0, max(y_list)+5, scale)
+
+            in_axs.axes.set_yticks(y_list)
+            if isinstance(tmp_range, float):
+                y_list = [str(y/label_scale) for y in y_list]
+            elif isinstance(tmp_range, int):
+                y_list = [str(int(y//label_scale)) for y in y_list]
+
+        elif y_index == 'div':
+            y_list = [0, 0.5, 1.0, 1.5]
+            in_axs.axes.set_yticks(y_list)
+        
+        elif y_index == 'num_in_conf' or y_index == 'num_ex_conf':
+            label_scale = 0.2
+            scale = label_scale * 1
+            # y_list = [0, 0.1, 0.2, 0.3, 0.4]
+            y_list = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+            # y_list = np.arange(0, max(y_list)+5, scale)
+            in_axs.axes.set_yticks(y_list)
+            # y_list = [str(y/label_scale) for y in y_list]
+        
+        elif y_index == 'num_total_conf':
+            label_scale = 1000
+            tmp_range = 2
+            scale = label_scale * tmp_range
+            y_list = np.arange(0, max(y_list)+5, scale)
+
+            in_axs.axes.set_yticks(y_list)
+            if isinstance(tmp_range, float):
+                y_list = [str(y/label_scale) for y in y_list]
+            elif isinstance(tmp_range, int):
+                y_list = [str(int(y//label_scale)) for y in y_list]
+        
+        else:
+            in_axs.axes.set_yticks(y_list)
 
         in_axs.yaxis.grid()
         in_axs.axes.set_yticklabels(y_list, fontsize=self.text_size)
@@ -323,7 +429,7 @@ class DataProcessor:
                         label=solver['label'],
                         linewidth=self.line_width,
                         markerfacecolor='white',
-                        markeredgewidth=self.line_width,
+                        markeredgewidth=self.mark_width,
                         ms=self.marker_size,
                         color=solver['color'],
                         marker=solver['marker'])
@@ -348,33 +454,99 @@ class DataProcessor:
         in_axs.set_ylabel(self.y_labels[y_index], fontsize=self.text_size)
 
 
-    def get_sum_along_w(self, y_index:str='succ'):
-        result = self.get_val('w', y_index)
-        tmp_sum = dict()
-        for tmp_solver in self.config['solvers']:
-            tmp_sum[tmp_solver['name']] = dict()
-            for tmp_w_idx, tmp_w in enumerate(self.config['f_weights']):
-                tmp_tmp_sum = 0
-                for tmp_map in self.config['maps']:
-                    tmp_tmp_sum += result[tmp_solver['name']][tmp_map['name']]['val'][tmp_w_idx]
-                tmp_sum[tmp_solver['name']][tmp_w] = tmp_tmp_sum
-        pprint.pprint(tmp_sum)
-        return tmp_sum
+    # def subplot_hist_fig(self, x_index, y_indices, in_axs, in_map_idx, in_map, in_results):
+    #     _x_ = in_results[0][self.config['solvers'][0]['name']][in_map['name']]['x']
+    #     _num_ = range(1, len(_x_)+1)
 
-    def get_lb_improvement_along_w(self):
-        result1 = self.get_val('w', 'min f value')
-        result2 = self.get_val('w', ' root f value')
-        tmp_sum = dict()
-        for tmp_solver in self.config['solvers']:
-            tmp_sum[tmp_solver['name']] = dict()
-            for tmp_w_idx, tmp_w in enumerate(self.config['f_weights']):
-                tmp_tmp_sum = 0
-                for tmp_map in self.config['maps']:
-                    tmp_val = result1[tmp_solver['name']][tmp_map['name']]['val'][tmp_w_idx] - result2[tmp_solver['name']][tmp_map['name']]['val'][tmp_w_idx]
-                    tmp_tmp_sum += tmp_val
-                tmp_sum[tmp_solver['name']][tmp_w] = tmp_tmp_sum
-        pprint.pprint(tmp_sum)
-        return tmp_sum
+    #     for solver in self.config['solvers']:
+    #         _val_ = in_result[solver['name']][in_map['name']]['val']
+    #         _ci_  = in_result[solver['name']][in_map['name']]['ci']
+
+    #         if in_map_idx == 0:
+    #             in_axs.plot(_num_, _val_,
+    #                         label=solver['label'],
+    #                         linewidth=self.line_width,
+    #                         markerfacecolor='white',
+    #                         markeredgewidth=self.mark_width,
+    #                         ms=self.marker_size,
+    #                         color=solver['color'],
+    #                         marker=solver['marker'])
+    #         else:
+    #             in_axs.plot(_num_, _val_,
+    #                         linewidth=self.line_width,
+    #                         markerfacecolor='white',
+    #                         markeredgewidth=self.mark_width,
+    #                         ms=self.marker_size,
+    #                         color=solver['color'],
+    #                         marker=solver['marker'])
+
+    #         # Plot confident interval
+    #         if self.config['plot_ci'] and len(_ci_) > 0:
+    #             _lb_ = [_val_[i] - _ci_[i] for i in range(len(_val_))]
+    #             _ub_ = [_val_[i] + _ci_[i] for i in range(len(_val_))]
+    #             in_axs.fill_between(_num_, _lb_, _ub_, color=solver['color'], alpha=0.2)
+
+    #     in_axs.set_title(in_map['label'], fontsize=self.text_size)
+
+    #     if len(_num_) > self.max_x_num and x_index == "ins":  # This is for instance analysis
+    #         _num_ = list(range(len(_x_)//self.max_x_num, len(_x_)+1, len(_x_)//self.max_x_num))
+    #         _num_.insert(0, 1)
+    #         _x_ = _num_
+
+    #     in_axs.axes.set_xticks(_num_)
+    #     in_axs.axes.set_xticklabels(_x_, fontsize=self.text_size)
+    #     in_axs.set_xlabel(self.x_labels[x_index], fontsize=self.text_size)
+
+    #     y_list = in_axs.axes.get_yticks()
+    #     if y_index == 'succ':
+    #         y_list = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    #         in_axs.axes.set_yticks(y_list)
+    #     elif y_index == 'runtime':
+    #         y_list = range(0, 61, 10)
+    #         # y_list = range(0, 32, 5)
+    #         # y_list = range(0, 26, 5)
+    #         # y_list = range(0, 11, 2)
+    #         # y_list = range(0, 2, 1)
+    #         # y_list = [0, 0.5, 1.0, 1.5, 2.0]
+    #         in_axs.axes.set_yticks(y_list)
+    #     elif y_index == '#findPathForSingleAgent':
+    #         in_axs.axes.set_yticks(y_list)
+    #     elif y_index == '#low-level generated':
+    #         label_scale = 1000000
+    #         scale = label_scale * 0.1
+    #         y_list = np.arange(0, max(y_list)+5, scale)
+    #         # y_list = np.arange(0, max(y_list)+5, scale)
+    #         # y_list = np.delete(y_list, 0)
+    #         # y_list = np.delete(y_list, 0)
+    #         # y_list = np.delete(y_list, -1)
+    #         # y_list = np.delete(y_list, -1)
+    #         in_axs.axes.set_yticks(y_list)
+    #         y_list = [str(y/label_scale) for y in y_list]
+    #         # y_list = [str(int(y//label_scale)) for y in y_list]
+    #     elif y_index == '#high-level generated':
+    #         label_scale = 1000
+    #         scale = label_scale * 0.2
+    #         y_list = np.arange(0, max(y_list)+5, scale)
+
+    #         in_axs.axes.set_yticks(y_list)
+    #         # y_list = [str(int(y)) for y in y_list]
+    #         y_list = [str(y/label_scale) for y in y_list]
+    #         # y_list = [str(int(y//label_scale)) for y in y_list]
+    #     else:
+    #         if y_index == 'div':
+    #             y_list = [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2]
+    #             in_axs.axes.set_yticks(y_list)
+    #         else:
+    #             label_scale = 1000
+    #             scale = label_scale * 1
+    #             y_list = np.arange(0, max(y_list)+5, scale)
+    #             in_axs.axes.set_yticks(y_list)
+    #             y_list = [str(int(y//label_scale)) for y in y_list]        
+
+    #     in_axs.yaxis.grid()
+    #     in_axs.axes.set_yticklabels(y_list, fontsize=self.text_size)
+    #     in_axs.set_ylabel(self.y_labels[y_index], fontsize=self.text_size)
+
 
     def plot_fig(self, x_index:str='num', y_index:str='succ'):
         # Get the result from the experiments
@@ -398,7 +570,8 @@ class DataProcessor:
         fig.tight_layout()
         if y_index == 'succ':
             plt.legend(loc="lower left", fontsize=self.text_size)
-        elif y_index == 'runtime' or y_index == '#low-level generated' or y_index == '#high-level generated':
+        elif y_index == 'runtime' or y_index == '#low-level generated' or \
+            y_index == '#high-level generated':
             plt.legend(loc="upper left", fontsize=self.text_size)
         else:
             plt.legend(loc="best", fontsize=self.text_size)
@@ -406,55 +579,53 @@ class DataProcessor:
         plt.savefig(fig_name)
         plt.show()
 
-    def plot_fig2(self, x_index:str='num', y_index:str='succ'):
-        # Get the result from the experiments
-        y = '#findPathForSingleAgent'
-        sum_ag_plan = self.get_val(x_index, y, false)
-        ll_node_focal = self.get_val(x_index, '#low-level in focal', false)
+    def plot_op(self, y_index1:str='#pathfinding', y_index2:str='#high-level generated',
+                use_op:str='add'):
+        """Plot the ratio between the sum of y_index1 / the sum of the y_index2
+
+        Args:
+            y_index1 (str, optional): list of the 1st numbers. Defaults to '#pathfinding'.
+            y_index2 (str, optional): list of the 2nd numbers. Defaults to '#high-level generated'.
+            use_op (str, optional): which operator to use. Defaults to 'div'.
+        """
+        x_index = 'num'
+        op_list = ['add', 'sub', 'mul', 'div', 'mod']
+        if use_op not in op_list:
+            logging.error('use_op is undefined!, Should be one of the {0}'.format(op_list))
+            exit(0)
+
+        # Get the result (sum) from the experiments
+        val1 = self.get_val(x_index, y_index1, false)
+        val2 = self.get_val(x_index, y_index2, false)
 
         result = dict()
-        for tmp_solver in self.config['solvers']:
-            result[tmp_solver['name']] = {'x':list(), 'val':list()}
-            for tmp_w_idx, tmp_w in enumerate(self.config['f_weights']):
-                tmp_tmp_sum = 0
-                for tmp_map in self.config['maps']:
-                    tmp_val = ll_node_focal[tmp_solver['name']][tmp_map['name']]['val'][tmp_w_idx] / sum_ag_plan[tmp_solver['name']][tmp_map['name']]['val'][tmp_w_idx]
-                    tmp_tmp_sum += tmp_val
-                result[tmp_solver['name']]['x'].append(tmp_w)
-                result[tmp_solver['name']]['val'].append(tmp_tmp_sum)
-
-        # Plot all the subplots on the figure
-        fig, axs = plt.subplots(nrows=1,
-                                ncols=1,
-                                figsize=self.fig_size,
-                                dpi=80, facecolor='w', edgecolor='k')
-
-        self.subplot_fig2(x_index, 'Ratio', axs, result)
-
-        fig.tight_layout(rect=[0, 0, 1, 0.98])
-        fig.legend(loc="upper center",
-                   bbox_to_anchor= (0.5, 1.01),
-                   borderpad=0.25, handletextpad=0.1, labelspacing=0.75, columnspacing=0.75,
-                   ncol=len(self.config['solvers']),
-                   fontsize=self.text_size)
-        fig_name = x_index + '_' + y_index + '_plot.png'
-        plt.savefig(fig_name)
-        plt.show()
-
-    def plot_fig3(self, x_index:str='w', y_index:str='#findPathForSingleAgent'):
-        # Get the result from the experiments
-        sum_ag_plan = self.get_val(x_index, y_index, false)
-        ll_node_focal = self.get_val(x_index, '#low-level in focal', false)
-
-        result = dict()
-        for solver in self.config['solvers']:
-            result[solver['name']] = dict()
+        for _solver_ in self.config['solvers']:
+            result[_solver_['name']] = dict()
             for _map_ in self.config['maps']:
-                result[solver['name']][_map_['name']] = {'x': list(), 'val': list(), 'ci': list()}
-                for tmp_w_idx, tmp_fw in enumerate(self.config['f_weights']):
-                    tmp_val = ll_node_focal[solver['name']][_map_['name']]['val'][tmp_w_idx] / sum_ag_plan[solver['name']][_map_['name']]['val'][tmp_w_idx]
-                    result[solver['name']][_map_['name']]['x'].append(tmp_fw)
-                    result[solver['name']][_map_['name']]['val'].append(tmp_val)
+                result[_solver_['name']][_map_['name']] = {'x': list(), 'val': list(), 'ci': list()}
+                for idx, ag_num in enumerate(_map_['num_of_agents']):
+                    tmp_val1 = val1[_solver_['name']][_map_['name']]['val'][idx]
+                    tmp_val2 = val2[_solver_['name']][_map_['name']]['val'][idx]
+
+                    if use_op == 'add':
+                        tmp_val = tmp_val1 + tmp_val2
+                    elif use_op == 'sub':
+                        tmp_val = tmp_val1 - tmp_val2
+                    elif use_op == 'mil':
+                        tmp_val = tmp_val1 * tmp_val2
+                    elif use_op == 'div':
+                        if tmp_val2 == 0:
+                            tmp_val = np.inf
+                        else:
+                            tmp_val = float(tmp_val1) / float(tmp_val2)
+                    elif use_op == 'mod':
+                        if tmp_val2 == 0:
+                            tmp_val = np.inf
+                        else:
+                            tmp_val = float(tmp_val1) % float(tmp_val2)
+                        
+                    result[_solver_['name']][_map_['name']]['x'].append(ag_num)
+                    result[_solver_['name']][_map_['name']]['val'].append(tmp_val)
 
         # Plot all the subplots on the figure
         fig, axs = plt.subplots(nrows=self.fig_axs[len(self.config['maps'])][0],
@@ -465,21 +636,56 @@ class DataProcessor:
         for idx, _map_ in enumerate(self.config['maps']):
             frow, fcol = self.get_subfig_pos(idx)
             if len(self.config['maps']) == 1:
-                self.subplot_fig(x_index, y_index, axs, idx, _map_, result)
+                self.subplot_fig(x_index, use_op, axs, idx, _map_, result)
             elif self.fig_axs[len(self.config['maps'])][0] == 1:
-                self.subplot_fig(x_index, y_index, axs[fcol], idx, _map_, result)
+                self.subplot_fig(x_index, use_op, axs[fcol], idx, _map_, result)
             else:
-                self.subplot_fig(x_index, y_index, axs[frow,fcol], idx, _map_, result)
+                self.subplot_fig(x_index, use_op, axs[frow,fcol], idx, _map_, result)
 
-        fig.tight_layout(rect=[0, 0, 1, 0.92])
-        fig.legend(loc="upper center",
-                   bbox_to_anchor= (0.5, 1.01),
-                   borderpad=0.25, handletextpad=0.1, labelspacing=0.75, columnspacing=0.75,
-                   ncol=len(self.config['solvers']),
-                   fontsize=self.text_size)
-        fig_name = x_index + '_' + y_index + '_plot.png'
+        fig.tight_layout()
+
+        if use_op == 'div':
+            plt.legend(loc="lower right", fontsize=self.text_size)
+        else:
+            plt.legend(loc="best", fontsize=self.text_size)
+
+        fig_name = x_index + '_' + use_op + '_plot.png'
         plt.savefig(fig_name)
         plt.show()
+
+    # def plot_hist_fig(self, x_index:str='num', y_index:List[str]=['num_ex_conf', 'num_in_conf']):
+    #     # Get the result from the experiments
+    #     results_list = list()
+    #     for y_idx in y_index:
+    #         result = self.get_val(x_index, y_idx)
+    #         results_list.append(result)
+
+    #     # Plot all the subplots on the figure
+    #     fig, axs = plt.subplots(nrows=self.fig_axs[len(self.config['maps'])][0],
+    #                             ncols=self.fig_axs[len(self.config['maps'])][1],
+    #                             figsize=self.fig_size,
+    #                             dpi=80, facecolor='w', edgecolor='k')
+
+    #     for idx, _map_ in enumerate(self.config['maps']):
+    #         frow, fcol = self.get_subfig_pos(idx)
+    #         if len(self.config['maps']) == 1:
+    #             self.subplot_fig(x_index, y_index, axs, idx, _map_, results_list)
+    #         elif self.fig_axs[len(self.config['maps'])][0] == 1:
+    #             self.subplot_fig(x_index, y_index, axs[fcol], idx, _map_, results_list)
+    #         else:
+    #             self.subplot_fig(x_index, y_index, axs[frow,fcol], idx, _map_, results_list)
+
+    #     fig.tight_layout()
+    #     if y_index == 'succ':
+    #         plt.legend(loc="lower left", fontsize=self.text_size)
+    #     elif y_index == 'runtime' or y_index == '#low-level generated' or \
+    #           y_index == '#high-level generated':
+    #         plt.legend(loc="upper left", fontsize=self.text_size)
+    #     else:
+    #         plt.legend(loc="best", fontsize=self.text_size)
+    #     fig_name = x_index + '_' + y_index + '_plot.png'
+    #     plt.savefig(fig_name)
+    #     plt.show()
 
 
 if __name__ == '__main__':
@@ -493,9 +699,12 @@ if __name__ == '__main__':
     data_processor.plot_fig(x_index='num', y_index='succ')
     data_processor.plot_fig(x_index='num', y_index='runtime')
     # data_processor.plot_fig(x_index='num', y_index='max_ma_size')
+    # data_processor.plot_fig(x_index='num', y_index='#low-level generated')
+    # data_processor.plot_fig(x_index='num', y_index='#high-level generated')
+    # data_processor.plot_fig(x_index='num', y_index='#pathfinding')
+    # data_processor.plot_op(y_index1='#pathfinding',y_index2='#high-level generated',use_op='div')
     # data_processor.plot_fig(x_index='ins', y_index='solution cost')
     # data_processor.plot_fig(x_index='ins', y_index='max_ma_size')
-    data_processor.plot_fig(x_index='num', y_index='#low-level generated')
-    # data_processor.plot_fig(x_index='num', y_index='#low-level expanded')
-    data_processor.plot_fig(x_index='num', y_index='#high-level generated')
-    # data_processor.plot_fig(x_index='num', y_index='#pathfinding')
+    # data_processor.plot_fig(x_index='ins', y_index='num_total_conf')
+    # data_processor.plot_fig(x_index='ins', y_index='num_in_conf')
+    # data_processor.plot_fig(x_index='ins', y_index='num_ex_conf')

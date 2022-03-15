@@ -549,10 +549,6 @@ void GICBSSearch::findConflictswithMaxMA(GICBSNode& curr, bool internal_first)
         for (int a1 = 0; a1 < num_of_agents; a1++)
         {
             set<int> ma1 = findMetaAgent(curr, a1, SIZE_MAX);
-
-            if (ma1.size() < max_total_size)
-                continue;
-
             for (int a2 = a1+1; a2 < num_of_agents; a2++)
             {
                 if (find(ma1.begin(), ma1.end(), a2) != ma1.end())  // a2 is in ma1
@@ -562,14 +558,7 @@ void GICBSSearch::findConflictswithMaxMA(GICBSNode& curr, bool internal_first)
                 else
                 {
                     set<int> ma2 = findMetaAgent(curr, a2, SIZE_MAX);
-                    if (ma2.size() < max_total_size)
-                        continue;
-
-                    if (ma1.size() + ma2.size() < max_total_size)
-                    {
-                        continue;
-                    }
-                    else
+                    if (ma1.size() + ma2.size() >= max_total_size)
                     {
                         shared_ptr<Conflict> tmp_conf = findEarliestConflict(curr, a1, a2);
                         if (tmp_conf == nullptr)
