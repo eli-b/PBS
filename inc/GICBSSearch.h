@@ -94,6 +94,7 @@ public:
     void findConflictsminTimestepEval(GICBSNode& curr);
     void findConflictswithMinMA(GICBSNode& curr);
     void findConflictswithMaxMA(GICBSNode& curr, bool internal_first=true);
+    void findConflictswithMaxEarliestConf(GICBSNode& curr);
     void findConflictsCenter(GICBSNode& curr);
     void findConflictsRandom(GICBSNode& curr);
     void findConflictsRandomEval(GICBSNode& curr);

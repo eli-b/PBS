@@ -11,10 +11,10 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/PBS",
             "args": [
-                // "-m/home/rdaneel/mapf_benchmark/mapf-map/random-32-32-20.map",
-                // "-a/home/rdaneel/mapf_benchmark/scen-even/random-32-32-20-even-9.scen",
-                "-m/home/rdaneel/mapf_benchmark/mapf-map/room-32-32-4.map",
-                "-a/home/rdaneel/mapf_benchmark/scen-even/room-32-32-4-even-23.scen",
+                "-m/home/rdaneel/mapf_benchmark/mapf-map/random-32-32-20.map",
+                "-a/home/rdaneel/mapf_benchmark/scen-even/random-32-32-20-even-9.scen",
+                // "-m/home/rdaneel/mapf_benchmark/mapf-map/room-32-32-4.map",
+                // "-a/home/rdaneel/mapf_benchmark/scen-even/room-32-32-4-even-23.scen",
                 // "-m/home/rdaneel/mapf_benchmark/mapf-map/maze-32-32-2.map",
                 // "-a/home/rdaneel/mapf_benchmark/scen-even/maze-32-32-2-even-16.scen", 
                 // "-m/home/rdaneel/mapf_benchmark/mapf-map/den520d.map",
@@ -24,7 +24,7 @@
                 "-o${workspaceFolder}/result_debug.csv", 
                 "-k100",
                 "-f", "false",
-                "-d", "0",
+                "-d", "1",
                 "-c", "3"
             ],
             "stopAtEntry": false,
@@ -45,8 +45,8 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/script/data_processor.py",
-            // "args": ["--config", "${workspaceFolder}/script/config.yaml"],
-            "args": ["--config", "${workspaceFolder}/script/config_hang.yaml"],
+            "args": ["--config", "${workspaceFolder}/script/config.yaml"],
+            // "args": ["--config", "${workspaceFolder}/script/config_hang.yaml"],
             "console": "integratedTerminal"
         },
         {

@@ -608,6 +608,85 @@ void GICBSSearch::findConflictswithMaxMA(GICBSNode& curr, bool internal_first)
 }
 
 
+void GICBSSearch::findConflictswithMaxEarliestConf(GICBSNode& curr)
+{
+    unordered_map<int, set<shared_ptr<Conflict>>> ag_conf;
+    for (int a1 = 0; a1 < num_of_agents; a1++)
+    {
+        for (int a2 = a1+1; a2 < num_of_agents; a2++)
+        {
+            shared_ptr<Conflict> tmp_conf = findEarliestConflict(curr, a1, a2);
+            if (tmp_conf != nullptr)
+            {
+                if (ag_conf.count(a1) == 0)
+                {
+                    ag_conf[a1] = set<shared_ptr<Conflict>>({tmp_conf});
+                }
+                else
+                {
+                    assert(ag_conf[a1].size() > 0);
+                    ag_conf[a1].insert(tmp_conf);
+                }
+            }
+        }
+    }
+
+    if (ag_conf.size() == 0)  // Conflict-free
+        curr.conflict = nullptr;
+
+    set<int> max_conf_ags;
+    size_t max_num_conf = 0;
+    for (const auto& conf : ag_conf)
+    {
+        if (conf.second.size() >= max_num_conf)
+        {
+            if (conf.second.size() > max_num_conf)
+            {
+                max_conf_ags.clear();
+                max_num_conf = conf.second.size();
+            }
+            max_conf_ags.insert(conf.first);
+        }
+    }
+
+    set<shared_ptr<Conflict>> tmp_conf_set;
+    for (const int& ag : max_conf_ags)
+    {
+        for (const auto& conf : ag_conf[ag])
+        {
+            tmp_conf_set.insert(conf);
+        }
+    }
+
+    // Debug: check duplication
+    for (auto it=tmp_conf_set.begin(); it!=tmp_conf_set.end(); it++)
+    {
+        for (auto it2=next(it); it2!=tmp_conf_set.end(); it2++)
+        {
+            bool is_same = (get<0>(**it) == get<0>(**it2)) && (get<1>(**it) == get<1>(**it2)) &&
+                (get<2>(**it) == get<2>(**it2)) && (get<3>(**it) == get<3>(**it2)) && 
+                (get<4>(**it) == get<4>(**it2));
+            if (is_same)
+            {
+                cout << "Should not be the same!!!" << endl;
+                assert(!is_same);
+            }
+        }
+    }
+
+    int min_timestep = INT_MAX;
+    assert(curr.conflict == nullptr);
+    for (const auto& conf : tmp_conf_set)
+    {
+        int cur_timestep = get<4>(*conf);
+        if (cur_timestep < min_timestep)
+        {
+            min_timestep = cur_timestep;
+            curr.conflict = conf;
+        }  
+    }
+}
+
 // void GICBSSearch::findConflictsCenter(GICBSNode& curr)
 // {
 //     if (curr.parent == nullptr)

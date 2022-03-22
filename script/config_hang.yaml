@@ -2,24 +2,26 @@ exp_path: "/home/rdaneel/my_exp_socs2022/"
 # exp_path: "/home/rdaneel/my_exp/"
 ins_num: 50
 time_limit: 60
+set_title: true
+set_legend: true
 plot_ci: false
 plot_std: false
 
 maps:
-  - name: "10obs-20x20"
-    label: $20\times20$ Grid ($10\%$ obstacles)
-    scens:
-      - hang
-    num_of_agents:
-      - 20
-      - 30
-      - 40
-      - 50
-      - 60
-      - 70
-      - 80
-      - 90
-      - 100
+  # - name: "10obs-20x20"
+  #   label: $20\times20$ Grid ($10\%$ obstacles)
+  #   scens:
+  #     - hang
+  #   num_of_agents:
+  #     - 20
+  #     - 30
+  #     - 40
+  #     - 50
+  #     - 60
+  #     - 70
+  #     - 80
+  #     - 90
+  #     - 100
 
   # - name: "20x20"
   #   label: Empty $20\times20$ Grid
@@ -50,16 +52,16 @@ maps:
   #     - 140
   #     - 160
 
-  # - name: "lak503d"
-  #   label: lak503d
-  #   scens:
-  #     - hang
-  #   num_of_agents:
-  #     - 20
-  #     - 40
-  #     - 60
-  #     - 80
-  #     - 100
+  - name: "lak503d"
+    label: lak503d
+    scens:
+      - hang
+    num_of_agents:
+      - 20
+      - 40
+      - 60
+      - 80
+      - 100
 
 solvers:
   # - name: "PBS0"
@@ -77,15 +79,15 @@ solvers:
   #   color: "purple"
   #   marker: "d"
   
-  - name: "PBS6"
-    label: "PBS(Earliest)"
-    color: 'deepskyblue'
-    marker: 'o'
-
-  # - name: "PBS6a"
+  # - name: "PBS6"
   #   label: "PBS(Earliest)"
   #   color: 'deepskyblue'
   #   marker: 'o'
+
+  - name: "PBS6a"
+    label: "PBS(Earliest)"
+    color: 'deepskyblue'
+    marker: 'o'
  
   - name: "PBS2"
     label: "PBS(Smallest)"
