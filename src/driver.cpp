@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     desc.add_options()
             ("help", "produce help message")
             ("map,m", po::value<std::string>()->required(), "input file for map")
-            ("agents,a", po::value<std::string>()->required(), "input file for agents")
+            ("agents,a", po::value<std::string>()->required(), "input file for agents/scen")
             ("output,o", po::value<std::string>()->required(), "output file for schedule")
             ("agentNum,k", po::value<int>()->default_value(0), "number of agents")
             ("seed,s", po::value<int>()->default_value(123), "random seed")
@@ -63,11 +63,7 @@ int main(int argc, char** argv)
 
     bool fixed_prior = vm["fixedOrder"].as<bool>();
     GICBSSearch icbs(ml, al, 1.0, egr, constraint_strategy::ICBS, fixed_prior);
-    bool res;
-    res = icbs.runGICBSSearch();
-
-    cout << "single agent path finding called: " << icbs.num_single_pathfinding << endl;
-
+    bool res = icbs.runGICBSSearch();
 
     if (!icbs.node_stat.empty())
     {

@@ -17,8 +17,6 @@ public:
     explicit ConflictAvoidanceTable(const int* moves_offset, int map_size)
             : moves_offset(moves_offset), toward_goal(map_size) {}
 
-    //ConflictAvoidanceTable(const ConflictAvoidanceTable& other) : toward_goal(other.toward_goal), at_goal(other.at_goal) {}
-
     ConflictAvoidanceTable(ConflictAvoidanceTable&& other) :
         toward_goal(std::move(other.toward_goal)), at_goal(std::move(other.at_goal)),
         moves_offset(other.moves_offset)

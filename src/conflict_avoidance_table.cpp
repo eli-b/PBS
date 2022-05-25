@@ -1,4 +1,3 @@
-#include<iostream>
 #include <limits>
 #include "conflict_avoidance_table.h"
 #include "map_loader.h"
