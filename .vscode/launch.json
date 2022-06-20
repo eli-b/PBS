@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/build/PBS",
             "args": [
                 "-m/home/rdaneel/mapf_benchmark/mapf-map/random-32-32-20.map",
-                "-a/home/rdaneel/mapf_benchmark/scen-even/random-32-32-20-even-9.scen",
+                "-a/home/rdaneel/mapf_benchmark/scen-even/random-32-32-20-even-11.scen",
                 // "-m/home/rdaneel/mapf_benchmark/mapf-map/room-32-32-4.map",
                 // "-a/home/rdaneel/mapf_benchmark/scen-even/room-32-32-4-even-23.scen",
                 // "-m/home/rdaneel/mapf_benchmark/mapf-map/maze-32-32-2.map",
@@ -22,10 +22,10 @@
                 // "-m/home/rdaneel/hang_instances/dao_maps/brc202d.map",
                 // "-a/home/rdaneel/hang_instances/dao_maps/brc202d-20agents-1.agents", 
                 "-o${workspaceFolder}/result_debug.csv", 
-                "-k100",
+                "-k60",
                 "-f", "false",
                 "-d", "1",
-                "-c", "3"
+                "-c", "4"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

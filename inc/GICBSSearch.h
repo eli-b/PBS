@@ -90,18 +90,17 @@ public:
     shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, 
         size_t start_t=0, size_t end_t=SIZE_MAX);
     void findConflictsOri(GICBSNode& curr);
-    void findConflictsminTimestep(GICBSNode& curr);
-    void findConflictsminTimestepEval(GICBSNode& curr);
+    void findConflictsminTimestep(GICBSNode& curr, bool is_eval=false);
     void findConflictswithMinMA(GICBSNode& curr);
-    void findConflictswithMaxMA(GICBSNode& curr, bool internal_first=true);
+    void findConflictswithMaxMA(GICBSNode& curr);
     void findConflictswithMaxEarliestConf(GICBSNode& curr);
-    void findConflictsCenter(GICBSNode& curr);
-    void findConflictsRandom(GICBSNode& curr);
-    void findConflictsRandomEval(GICBSNode& curr);
+    void findConflictsBFS(GICBSNode& curr);
+    void findConflictswithMinConstraints(GICBSNode& curr);
+    void findConflictswithMaxConstraints(GICBSNode& curr);
+    void findConflictsRandom(GICBSNode& curr, bool is_eval=false);
     void findConflicts(GICBSNode& curr);
     bool isCollide(const GICBSNode& curr, int a1, int a2);
     void selectConflict(GICBSNode& curr);
-    void printConflicts(GICBSNode& curr);
 
     set<int> findMetaAgent(const GICBSNode& curr, int ag, size_t size_th=SIZE_MAX);
 
@@ -124,7 +123,12 @@ public:
     void printPaths() const;
     void printAgentPath(int ag) const;
 
-    void printConflicts(const GICBSNode& n) const;
+    void printConflicts(const GICBSNode& n) const
+    {
+        cout << "<a1:" << get<0>(*n.conflict) << ", a2:" << get<1>(*n.conflict) << 
+        ", v1:" << get<2>(*n.conflict) << ", v2:" << get<3>(*n.conflict) << 
+        ", t:" << get<4>(*n.conflict) << ">" << endl;
+    }
 
     void printConstraints(const GICBSNode* n) const;
 
