@@ -82,9 +82,7 @@ public:
     bool generateChild(GICBSNode* child, GICBSNode* curr);
 
     inline void updatePaths(GICBSNode* curr);
-
-    // void copyConflicts(const AgentsConflicts& conflicts, AgentsConflicts& copy, 
-    //     const set<int>& excluded_agents);
+    vector<vector<PathEntry>> copyPaths(const GICBSNode* curr);
 
     // bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
     shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, 
@@ -99,8 +97,8 @@ public:
     void findConflictswithMaxConstraints(GICBSNode& curr);
     void findConflictsRandom(GICBSNode& curr, bool is_eval=false);
     void findConflicts(GICBSNode& curr);
-    bool isCollide(const GICBSNode& curr, int a1, int a2);
-    void selectConflict(GICBSNode& curr);
+    bool isCollide(int a1, int a2);
+    bool isPathsValid(GICBSNode* curr);
 
     set<int> findMetaAgent(const GICBSNode& curr, int ag, size_t size_th=SIZE_MAX);
 
@@ -113,6 +111,8 @@ public:
 
     inline int getAgentLocation(int agent_id, size_t timestep);
 
+    int getNumConstraints(const GICBSNode& curr, int a1, int a2);
+
     void updateFocalList(double old_lower_bound, double new_lower_bound, double f_weight);
 
     //void updateReservationTable(bool* res_table, bool* res_table_low_prio, int exclude_agent, const GICBSNode &node);
@@ -122,6 +122,7 @@ public:
 
     void printPaths() const;
     void printAgentPath(int ag) const;
+    void printAgentPath(int ag, const vector<PathEntry>& in_path) const;
 
     void printConflicts(const GICBSNode& n) const
     {
