@@ -22,15 +22,9 @@ public:
     uint64_t agent_itself_failed = 0;
     uint64_t lower_priority_agent_failed = 0;
     list<tuple<int, int, int, int, int, int, int>> node_stat;
-    //double upper_bound;
     typedef boost::heap::pairing_heap<GICBSNode*, boost::heap::compare<GICBSNode::compare_node>> heap_open_t;  // Note the heap only gives preference to higher depth, making it not a heap but a kind of stack
-    //typedef boost::heap::fibonacci_heap< GICBSNode*, boost::heap::compare<GICBSNode::secondary_compare_node> > heap_focal_t;
-    //typedef boost::heap::fibonacci_heap< MDDNode*, boost::heap::compare<MDDNode::compare_node> > mdd_open_t;
-    //typedef dense_hash_map<GICBSNode*, GICBSNode*, GICBSNode::GICBSNodeHasher, GICBSNode::ecbs_eqnode> hashtable_t;
 
     heap_open_t open_list;
-    //heap_focal_t focal_list;
-    //hashtable_t allNodes_table;
     list<std::unique_ptr<GICBSNode>> allNodes_table;
 
     bool solution_found;
@@ -38,7 +32,6 @@ public:
 
     double focal_w = 1.0;
     double min_f_val;
-    double focal_list_threshold;
     size_t max_ma_size;
 
     const bool* my_map;

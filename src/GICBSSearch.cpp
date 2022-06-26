@@ -233,16 +233,7 @@ bool GICBSSearch::isPathsValid(GICBSNode* curr)
 {
     bool is_collide = false;
     vector<vector<PathEntry>*> copy_paths(paths);
-
-    // cout << "\nBefore update: " << endl;
-    // for (const auto& p : curr->new_paths)
-    //     printAgentPath(p.first);
-
     updatePaths(curr);
-
-    // cout << "\nAfter update: " << endl;
-    // for (const auto& p : curr->new_paths)
-    //     printAgentPath(p.first);    
 
     for (int a1 = 0; a1 < num_of_agents; a1++)
     {
@@ -273,7 +264,7 @@ void GICBSSearch::findConflictsRandom(GICBSNode& curr, bool is_eval)
     vector<int> new_ag;
     for (int i = 0; i < num_of_agents; i++)
         new_ag.push_back(i);
-    std::random_shuffle(new_ag.begin(), new_ag.end());
+    random_shuffle(new_ag.begin(), new_ag.end());
 
     for (int a1 = 0; a1 < num_of_agents; a1++)
     {
@@ -324,10 +315,6 @@ void GICBSSearch::findConflictswithMinMA(GICBSNode& curr)
     else
     {
         // Find the internal conflict of the previously-merged agent
-        // cout << "------------------------------------" << endl;
-        // cout << "At node->time_generated " << curr.time_generated << ", ";
-        // cout << "Replan agent " << curr.agent_id << endl;
-        // cout << "Find internal conflict: ";
         assert(curr.agent_id != -1);
         set<int> curr_ma = findMetaAgent(curr, curr.agent_id);
         for (auto it1=curr_ma.begin(); it1!=curr_ma.end(); it1++)
@@ -344,24 +331,7 @@ void GICBSSearch::findConflictswithMinMA(GICBSNode& curr)
                 }
             }
         }
-        // cout << "None" << endl;
-        // // Debug
-        // for (auto it1=curr_ma.begin(); it1!=curr_ma.end(); it1++)
-        // {
-        //     for (auto it2=next(it1); it2!=curr_ma.end(); it2++)
-        //     {
-        //         if (isCollide(*it1, *it2))
-        //         {
-        //             cout << "Missing internal conflict between agents " << *it1 << " and " << *it2 << endl;
-        //             cout << "transPriorities[" << *it1 << "][" << *it2 << "]" << curr.trans_priorities[*it1][*it2] << endl;
-        //             cout << "transPriorities[" << *it2 << "][" << *it1 << "]" << curr.trans_priorities[*it2][*it1] << endl;
-        //         }
-        //         assert(!isCollide(*it1, *it2));
-        //     }
-        // }
-        // // end debug
 
-        // cout << "Find min size of agent";
         size_t min_total_size = SIZE_MAX;
         list<shared_ptr<Conflict>> min_size_conf;
         for (int a1 = 0; a1 < num_of_agents; a1++)
@@ -382,23 +352,14 @@ void GICBSSearch::findConflictswithMinMA(GICBSNode& curr)
                 else
                 {
                     set<int> ma2 = findMetaAgent(curr, a2, min_total_size+1);
-                    // cout << "ma2: ";
-                    // for (const int& da1 : ma2)
-                    // {
-                    //     cout << da1 << ", ";
-                    // }
-                    // cout << endl;
-
                     if (ma2.size() > min_total_size)
                     {
-                        // cout << "\tma2 size > min_total_size" << min_total_size << endl;
                         assert(ma2.size() == min_total_size+1);
                         continue;
                     }
 
                     if (ma1.size() + ma2.size() > min_total_size)
                     {
-                        // cout << "\tma1+ma2 size > min_total_size" << min_total_size << endl;
                         continue;
                     }
                     else
@@ -421,17 +382,6 @@ void GICBSSearch::findConflictswithMinMA(GICBSNode& curr)
 
         if (!min_size_conf.empty())
         {
-            // for (const auto& conf : min_size_conf)
-            // {
-            //     cout << "<" << get<0>(*conf) << ", " << get<1>(*conf) << ", " << get<2>(*conf) 
-            //         << ", " << get<3>(*conf) << ", " << get<4>(*conf) << "> | ";
-            // }
-            // cout << endl;
-            // list<shared_ptr<Conflict>>::iterator cit = min_size_conf.begin();
-            // int random = rand() % min_size_conf.size();
-            // std::advance(cit, random);
-            // curr.conflict = *cit;
-
             // Choose the earliest
             int min_conf_t = INT_MAX;
             for (const auto& conf : min_size_conf)
@@ -449,15 +399,6 @@ void GICBSSearch::findConflictswithMinMA(GICBSNode& curr)
         else
         {
             curr.conflict = nullptr;  // It is a goal node (conflict-free)
-            // Debug
-            for (int da1 = 0; da1 < num_of_agents; da1++)
-            {
-                for (int da2 = da1+1; da2 < num_of_agents; da2++)
-                {
-                    assert(!isCollide(da1, da2));
-                }
-            }
-            // end debug
         }
     }
 
@@ -490,10 +431,6 @@ void GICBSSearch::findConflictswithMaxMA(GICBSNode& curr)
     {
         // Find the internal conflict of the previously-merged agent
         // We must find the internal conflicts first in order to make the new PBS works
-        // cout << "------------------------------------" << endl;
-        // cout << "At node->time_generated " << curr.time_generated << ", ";
-        // cout << "Replan agent " << curr.agent_id << endl;
-        // cout << "Find internal conflict: ";
         assert(curr.agent_id != -1);
         set<int> curr_ma = findMetaAgent(curr, curr.agent_id);
         for (auto it1=curr_ma.begin(); it1!=curr_ma.end(); it1++)
@@ -548,7 +485,7 @@ void GICBSSearch::findConflictswithMaxMA(GICBSNode& curr)
             // Choose randomly
             // list<shared_ptr<Conflict>>::iterator cit = max_size_conf.begin();
             // int random = rand() % max_size_conf.size();
-            // std::advance(cit, random);
+            // advance(cit, random);
             // curr.conflict = *cit;
 
             // Choose the earliest
@@ -692,10 +629,6 @@ void GICBSSearch::findConflictsBFS(GICBSNode& curr)
                 {
                     if (curr.trans_priorities[top_ag][a2] || curr.trans_priorities[a2][top_ag])
                     {
-                        // cout << "trans_pri[" << top_ag << "][" << a2 << "] = "
-                        //     << curr.trans_priorities[top_ag][a2] << endl;
-                        // cout << "trans_pri[" << a2 << "][" << top_ag << "] = " 
-                        //     << curr.trans_priorities[a2][top_ag] << endl;
                         tmp_conf = findEarliestConflict(curr, top_ag, a2);
                         assert(tmp_conf == nullptr);
                     }
@@ -832,7 +765,7 @@ void GICBSSearch::findConflictsminTimestep(GICBSNode& curr, bool is_eval)
     vector<int> new_ag;
     for (int i = 0; i < num_of_agents; i++)
         new_ag.push_back(i);
-    std::random_shuffle(new_ag.begin(), new_ag.end());
+    random_shuffle(new_ag.begin(), new_ag.end());
 
     curr.conflict = nullptr;
     for (size_t t_step = 0; t_step < curr.makespan+1; t_step++)
@@ -864,7 +797,7 @@ void GICBSSearch::findConflictsminTimestep(GICBSNode& curr, bool is_eval)
 
 void GICBSSearch::findConflicts(GICBSNode& curr)
 {
-    cout << "find conflict for node " << right << setw(3) << curr.time_generated << ", ";
+    if (screen > 1) cout << "node " << right << setw(3) << curr.time_generated << " conflict: ";
     switch (conf_select_mode)
     {
     case 0:
@@ -1021,14 +954,17 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         }
     }
 
-    cout << "\tTopo: [";
-    for (const auto& a : topSort)
+    if (screen > 2)
     {
-        cout << right << setw(2) << a;
-        if (a != topSort.back())
-            cout << ",";
+        cout << "\tTopo: [";
+        for (const auto& a : topSort)
+        {
+            cout << right << setw(2) << a;
+            if (a != topSort.back())
+                cout << ",";
+        }
+        cout << "] | ";
     }
-    cout << "] | ";
 
     // Find a new path for ag and for every lower-priority agent that has a collision with a new path.
     for (auto iter = topSort.begin(); iter != topSort.end(); iter++)
@@ -1039,17 +975,6 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         {
             if (node->trans_priorities[a2][curr_agent])
             {
-                // Debug
-                if (node->parent->time_generated == 60 && curr_agent == 28)
-                {
-                    cout << endl;
-                    printAgentPath(a2);
-                    printAgentPath(44);
-                    printAgentPath(curr_agent);
-                    cout << endl;
-                }
-                // End debug
-
                 size_t min_path_length =
                         paths[curr_agent]->size() < paths[a2]->size() ? paths[curr_agent]->size() : paths[a2]->size();
                 for (size_t timestep = 0; timestep < min_path_length; timestep++)
@@ -1094,7 +1019,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
                                                // topological sort and isn't the original agent we need to find a path
                                                // for - no need to find a new path for it
         {
-            cout << "ag " << right << setw(2) << curr_agent << " no-conf | ";
+            if (screen > 2) cout << "ag " << right << setw(2) << curr_agent << " no-conf | ";
             continue;
         }
         size_t max_plan_len = node->makespan + 1; //getPathsMaxLength();
@@ -1106,26 +1031,8 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         LL_num_generated += search_engines[curr_agent]->num_generated;
         if (foundSol)
         {
-            // Debug
-            if (node->parent->time_generated == 9)
-            {
-                cout << endl;
-                cout << "old path: " << endl;
-                printAgentPath(48);
-                printAgentPath(1);
-                cout << "new path: " << endl;
-                printAgentPath(1, new_paths[1]);
-                cout << endl;
-            }
-            // End debug
             node->g_val = node->g_val - paths[curr_agent]->size() + new_paths[curr_agent].size();
             paths[curr_agent] = &new_paths[curr_agent]; // might be used by the next findPath() call
-            // if (node->parent->time_generated == 60)
-            // {
-            //     cout << "update the path" << endl;
-            //     printAgentPath(curr_agent);
-            //     cout << endl;
-            // }
             node->makespan = max(node->makespan, new_paths[curr_agent].size() - 1);
         }
         else
@@ -1149,14 +1056,18 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
                 debug_ag.push_back(i);
             }
         }
-        cout << "replan: [";
-        for (const auto& a : debug_ag)
+
+        if (screen > 2)
         {
-            cout << right << setw(2) << a;
-            if (a != debug_ag.back())
-                cout << ",";
+            cout << "replan: [";
+            for (const auto& a : debug_ag)
+            {
+                cout << right << setw(2) << a;
+                if (a != debug_ag.back())
+                    cout << ",";
+            }
+            cout << "]";
         }
-        cout << "]";
     }
     return true;
 }
@@ -1168,16 +1079,16 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     node->makespan = curr->makespan;
     node->depth = curr->depth + 1;
 
-    std::clock_t t1 = std::clock();
+    clock_t t1 = clock();
     if (!findPathForSingleAgent(node, node->agent_id))  // only consider negative constraints
         return false;
 
-    runtime_lowlevel += std::clock() - t1;
+    runtime_lowlevel += clock() - t1;
 
     node->f_val = node->g_val;
 
-    t1 = std::clock();
-    runtime_conflictdetection += std::clock() - t1;
+    t1 = clock();
+    runtime_conflictdetection += clock() - t1;
 
     // update handles
     node->open_handle = open_list.push(node);
@@ -1185,27 +1096,12 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     node->time_generated = HL_num_generated;
     allNodes_table.emplace_back(node);
 
-    // Debug: check if the transparent priorities agents are collision-free
-    cout << " -> generate node " << right << setw(3) << node->time_generated;
-    if (node->time_generated == 61)
+    if (screen > 1)
     {
-        cout << endl;
-        for (const auto& p : node->new_paths)
-            printAgentPath(p.first, p.second);
+        cout << " -> generate node " << right << setw(3) << node->time_generated;
+        isPathsValid(node);  // Check if the transparent priorities agents are collision-free
     }
 
-    if (node->trans_priorities[44][28] || node->trans_priorities[28][44])
-    {
-        cout << endl;
-        vector<vector<PathEntry>*> copy_paths(paths);
-        updatePaths(node);
-        isCollide(44, 28);
-        paths = copy_paths;
-        cout << endl;
-    }
-
-    isPathsValid(node);
-    // End debug
     return true;
 }
 
@@ -1214,12 +1110,11 @@ void GICBSSearch::printPaths() const
 {
     for (int i = 0; i < num_of_agents; i++)
     {
-        std::cout << "Agent " << i << " (" << paths_found_initially[i].size() - 1 << " -->" <<
-                  paths[i]->size() - 1 << "): ";
+        cout << "Agent " << right << setw(2) << i << " (" << paths_found_initially[i].size() - 1 << 
+            " -->" << paths[i]->size() - 1 << "): ";
         for (size_t t = 0; t < paths[i]->size(); t++)
-            std::cout << "(" << paths[i]->at(t).location / num_col << "," << paths[i]->at(t).location % num_col
-                      << ")->";
-        std::cout << std::endl;
+            cout << right << setw(3) << paths[i]->at(t).location << ",";
+        cout << endl;
     }
 }
 
@@ -1249,14 +1144,14 @@ void GICBSSearch::printConstraints(const GICBSNode* n) const
     const GICBSNode* curr = n;
     while (curr != dummy_start)
     {
-        std::cout << "<" << curr->agent_id
+        cout << "<" << curr->agent_id
                   << ", " << get<0>(curr->constraint)
                   << ", " << get<1>(curr->constraint)
                   << ", " << get<2>(curr->constraint);
         if (get<3>(curr->constraint))
-            std::cout << ", positive>" << std::endl;
+            cout << ", positive>" << endl;
         else
-            std::cout << ", negative>" << std::endl;
+            cout << ", negative>" << endl;
         curr = curr->parent;
     }
 }
@@ -1289,16 +1184,16 @@ inline int GICBSSearch::compute_g_val()
 bool GICBSSearch::runGICBSSearch()
 {
     node_stat.clear();
-    cout << "GICBS: " << endl;
+    if (screen > 0) cout << "PBS: " << endl;
     if (solution_cost == -2)
     {
         runtime = pre_runtime;
         return false;
     }
     // set timer
-    std::clock_t start;
-    start = std::clock();
-    std::clock_t t1;
+    clock_t start;
+    start = clock();
+    clock_t t1;
     runtime_computeh = 0;
     runtime_lowlevel = 0;
     runtime_listoperation = 0;
@@ -1310,7 +1205,7 @@ bool GICBSSearch::runGICBSSearch()
     while (!open_list.empty() && !solution_found)
     {
         // break after 1 minute
-        runtime = (std::clock() - start) + pre_runtime;
+        runtime = (clock() - start) + pre_runtime;
         if (runtime > TIME_LIMIT || HL_num_expanded > 1000000)
         {
             // timeout after 1 minutes or 1000000 expanded nodes
@@ -1323,88 +1218,74 @@ bool GICBSSearch::runGICBSSearch()
             }
             max_ma_size = max_size;
 
-            cout << "\nTIMEOUT; cost=" << solution_cost << 
-                "; solution delta=" << min_f_val - dummy_start->g_val <<
-                "; {HL,LL}x{expanded,generated}=" << HL_num_expanded << ", " << HL_num_generated <<
-                ", " << LL_num_expanded << ", " << LL_num_generated <<
-                "; runtime=" << runtime / CLOCKS_PER_SEC << " ; max_ma_size=" << max_ma_size << endl;
+            cout << "Timeout, runtime=" << runtime / CLOCKS_PER_SEC <<
+                ", solution delta=" << min_f_val - dummy_start->g_val <<
+                ", HL exp(gen)=" << HL_num_expanded << "(" << HL_num_generated << ")" <<
+                ", LL exp(gen)=" << LL_num_expanded << "(" << LL_num_generated << ")" <<
+                ", max_ma_size=" << max_ma_size << endl;
 
-            cout << "	Runtime summary: lowlevel = " << runtime_lowlevel / CLOCKS_PER_SEC << 
-                " ; listoperation = " << runtime_listoperation / CLOCKS_PER_SEC <<
-                " ; conflictdetection = " << runtime_conflictdetection / CLOCKS_PER_SEC << 
-                " ; computeh = " << runtime_computeh / CLOCKS_PER_SEC <<
-                " ; updatepaths = " << runtime_updatepaths / CLOCKS_PER_SEC << 
-                " ; collectcons = " << runtime_updatecons / CLOCKS_PER_SEC << endl;
-
-            if (curr != nullptr)
-                std::cout << "Depth of last node PBS worked on: " << curr->depth << std::endl;
-            if (!open_list.empty())
+            if (screen > 2)
             {
-                // Print the state of OPEN
-                double countSameF = 0;
-                double currF = open_list.top()->f_val;
-                double maxDepth = 0;
+                cout << "\tRuntime summary: lowlevel = " << runtime_lowlevel / CLOCKS_PER_SEC << 
+                    ", listoperation = " << runtime_listoperation / CLOCKS_PER_SEC <<
+                    ", conflictdetection = " << runtime_conflictdetection / CLOCKS_PER_SEC << 
+                    ", computeh = " << runtime_computeh / CLOCKS_PER_SEC <<
+                    ", updatepaths = " << runtime_updatepaths / CLOCKS_PER_SEC << 
+                    ", collectcons = " << runtime_updatecons / CLOCKS_PER_SEC << endl;
 
-                std::cout << "F-value counts in OPEN: " << std::endl;
-                while (!open_list.empty())
+                if (curr != nullptr)
+                    cout << "\tDepth of last node PBS worked on: " << curr->depth << endl;
+                if (!open_list.empty())
                 {
-                    curr = open_list.top();
-                    open_list.pop();
-                    if (curr->depth > maxDepth)
-                        maxDepth = curr->depth;
-                    if (curr->f_val > currF + 0.001)
+                    // Print the state of OPEN
+                    double countSameF = 0;
+                    double currF = open_list.top()->f_val;
+                    double maxDepth = 0;
+
+                    cout << "\tF-value counts in OPEN: " << endl;
+                    while (!open_list.empty())
                     {
-                        cout << "				#(f=" << currF << ") = " << countSameF << endl;
-                        countSameF = 1;
-                        currF = curr->f_val;
+                        curr = open_list.top();
+                        open_list.pop();
+                        if (curr->depth > maxDepth)
+                            maxDepth = curr->depth;
+                        if (curr->f_val > currF + 0.001)
+                        {
+                            cout << "\t\t#(f=" << currF << ") = " << countSameF << endl;
+                            countSameF = 1;
+                            currF = curr->f_val;
+                        }
+                        else
+                            countSameF++;
                     }
-                    else
-                        countSameF++;
+                    cout << "\t\t#(f=" << currF << ") = " << countSameF << endl;
+                    cout << "\tMax depth in OPEN: " << maxDepth << endl;
                 }
-                cout << "				#(f=" << currF << ") = " << countSameF << endl;
-                std::cout << "Max depth in OPEN: " << maxDepth << std::endl;
-            }
-            else
-            {
-                std::cout << "Open List Empty!!!" << endl;
+                else
+                {
+                    cout << "\tOpen List Empty!!!" << endl;
+                }
             }
             solution_found = false;
             break;
         }
-        t1 = std::clock();
+        t1 = clock();
         curr = open_list.top();
         open_list.pop();
-        // cout << "Expand node id:" << curr->agent_id << ", expand:" << curr->time_expanded
-        //     << ", generate:" << curr->time_generated << endl;
-        runtime_listoperation += std::clock() - t1;
-        // takes the paths_found_initially and UPDATE all constrained paths found for agents from curr to dummy_start (and lower-bounds)
-        t1 = std::clock();
+        runtime_listoperation += clock() - t1;
+        // takes the paths_found_initially and UPDATE all constrained paths 
+        // found for agents from curr to dummy_start (and lower-bounds)
+        t1 = clock();
         updatePaths(curr);
-        runtime_updatepaths += std::clock() - t1;
+        runtime_updatepaths += clock() - t1;
 
-        // if (curr->time_generated == 48)
-        // {
-        //     bool is_val = isPathsValid(curr);
-        //     cout << "node 48 is path valid? " << is_val << endl;
-        //     // cout << "paths: " << endl;
-        //     // printAgentPath(12);
-        //     // printAgentPath(23);
-        //     // cout << "-----------------" << endl;
-        //     // cout << "new paths: " << endl;
-        //     // for (const auto& p : curr->new_paths)
-        //     //     if (p.first == 12 || p.first == 23)
-        //     //         printAgentPath(p.first, p.second);
-        //     // cout << "-----------------" << endl;
-        // }
-
-        // Find one conflict for expansion
-        t1 = std::clock();
-        findConflicts(*curr);
-        runtime_conflictdetection += std::clock() - t1;
+        t1 = clock();
+        findConflicts(*curr);  // Find one conflict for expansion
+        runtime_conflictdetection += clock() - t1;
 
         if (curr->conflict == nullptr) // Fail to find a conflict => no conflicts
         {   // found a solution (and finish the while loop)
-            runtime = (std::clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
+            runtime = (clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
             solution_found = true;
             solution_cost = curr->g_val;
 
@@ -1417,11 +1298,13 @@ bool GICBSSearch::runGICBSSearch()
             }
             max_ma_size = max_size;
 
-            cout << "\ncost=" << solution_cost << "; solution delta=" << solution_cost - dummy_start->g_val <<
-                 "; #pathfinding=" << num_single_pathfinding <<
-                 "; HL exp(gen)=(" << HL_num_expanded << "," << HL_num_generated << ")" <<
-                 "; LL exp(gen)=(" << LL_num_expanded << "," << LL_num_generated << ")" <<
-                 "; runtime=" << runtime / CLOCKS_PER_SEC << "; max_size=" << max_ma_size << endl;
+            cout << "Succeed:) runtime=" << runtime / CLOCKS_PER_SEC << 
+                ", cost=" << solution_cost << 
+                ", solution delta=" << solution_cost - dummy_start->g_val <<
+                ", #pathfinding=" << num_single_pathfinding <<
+                ", HL exp(gen)=" << HL_num_expanded << "(" << HL_num_generated << ")" <<
+                ", LL exp(gen)=" << LL_num_expanded << "(" << LL_num_generated << ")" <<
+                ", max_size=" << max_ma_size << endl;
 
             // Check the paths are valid
             for (int a1 = 0; a1 < num_of_agents; a1++)
@@ -1431,9 +1314,7 @@ bool GICBSSearch::runGICBSSearch()
                     if (isCollide(a1, a2))
                     {
                         cout << "=======================" << endl;
-                        cout << endl;
                         cout << "Solution is invalid!!!" << endl;
-                        cout << endl;
                         cout << "=======================" << endl;
                         solution_cost = -2;
                         solution_found = false;
@@ -1455,7 +1336,7 @@ bool GICBSSearch::runGICBSSearch()
         HL_num_expanded++;
         curr->time_expanded = HL_num_expanded;
 
-        printConflicts(*curr);
+        if (screen > 1) printConflicts(*curr);
 
         GICBSNode* n1 = new GICBSNode();
         GICBSNode* n2 = new GICBSNode();
@@ -1497,20 +1378,6 @@ bool GICBSSearch::runGICBSSearch()
             n1->priorities = vector<vector<bool>>(curr->priorities);
             n1->trans_priorities = vector<vector<bool>>(curr->trans_priorities);
             n1->priorities[n2->agent_id][n1->agent_id] = true; // a2->a1
-            // n1->trans_priorities[n2->agent_id][n1->agent_id] = true;
-            // for (int i = 0; i < num_of_agents; i++)
-            // {
-            //     if (n1->trans_priorities[i][n2->agent_id] && !n1->trans_priorities[i][n1->agent_id])
-            //     {
-            //         for (int j = 0; j < num_of_agents; j++)
-            //         {
-            //             if (n1->trans_priorities[n1->agent_id][j])
-            //             {
-            //                 n1->trans_priorities[i][j] = true;  // transitivity
-            //             }
-            //         }
-            //     }
-            // }
 
             list<int> high_pri = list<int>({n2->agent_id});
             assert(!n1->trans_priorities[n2->agent_id][n2->agent_id]);
@@ -1529,31 +1396,11 @@ bool GICBSSearch::runGICBSSearch()
 
             Sol1 = generateChild(n1, curr);
             if (!gen_n2)
-            {
                 n1->depth--;
-            }
-            if (Sol1)
-            {
+            if (screen > 1 && Sol1)
                 cout << " Success!" << endl;
-                // if (n1->time_generated == 48)
-                // {
-                //     // vector<vector<PathEntry>> tmp_paths = copyPaths(n1);
-                //     // cout << "\t";
-                //     // printAgentPath(12, tmp_paths[12]);
-                //     // cout << "\t";
-                //     // printAgentPath(23, tmp_paths[23]);
-                //     cout << "\tis 12 and 23 collide? " << isCollide(12, 23) << endl;
-                // }
-                // if ((n2->agent_id==23 && n1->agent_id==12) || (n2->agent_id==12 && n1->agent_id==23))
-                // {
-                //     cout << "\t\tis collide: " << isCollide(n1->agent_id, n2->agent_id) << endl;
-                // }
-            }
-            else
-            {
+            else if (screen > 1)
                 cout << " Failed!" << endl;
-            }
-            
         }
         paths = copy_paths;
         if (gen_n2)  // Generate node with a1->a2 (a1 has higher priotiry than a2)
@@ -1565,20 +1412,6 @@ bool GICBSSearch::runGICBSSearch()
             n2->priorities = vector<vector<bool>>(curr->priorities);
             n2->trans_priorities = vector<vector<bool>>(curr->trans_priorities);
             n2->priorities[n1->agent_id][n2->agent_id] = true; // a1->a2
-            // n2->trans_priorities[n1->agent_id][n2->agent_id] = true;
-            // for (int i = 0; i < num_of_agents; i++)
-            // {
-            //     if (n2->trans_priorities[i][n1->agent_id] && !n2->trans_priorities[i][n2->agent_id])
-            //     {
-            //         for (int j = 0; j < num_of_agents; j++)
-            //         {
-            //             if (n2->trans_priorities[n2->agent_id][j])
-            //             {
-            //                 n2->trans_priorities[i][j] = true;  // transitivity
-            //             }
-            //         }
-            //     }
-            // }
 
             list<int> high_pri = list<int>({n1->agent_id});
             assert(!n2->trans_priorities[n1->agent_id][n1->agent_id]);
@@ -1595,33 +1428,13 @@ bool GICBSSearch::runGICBSSearch()
                     n2->trans_priorities[h_ag][l_ag] = true;
             assert(n2->trans_priorities[n1->agent_id][n2->agent_id]);
 
-
             Sol2 = generateChild(n2, curr);
             if (!gen_n2)
-            {
                 n2->depth--;
-            }
-            if (Sol2)
-            {
+            if (screen > 1 && Sol2)
                 cout << " Success!" << endl;
-                if (n2->time_generated == 48)
-                {
-                    vector<vector<PathEntry>> tmp_paths = copyPaths(n2);
-                    cout << "\t";
-                    printAgentPath(12, tmp_paths[12]);
-                    cout << "\t";
-                    printAgentPath(23, tmp_paths[23]);
-                    cout << "\tis 12 and 23 collide? " << isCollide(12, 23) << endl;
-                }
-                // if ((n2->agent_id==23 && n1->agent_id==12) || (n2->agent_id==12 && n1->agent_id==23))
-                // {
-                //     cout << "\t\tis_collide: " << isCollide(n1->agent_id, n2->agent_id) << endl;
-                // }
-            }
-            else
-            {
+            else if (screen > 1)
                 cout << " Failed!" << endl;
-            }
         }
 
         if (Sol1 && Sol2)
@@ -1643,23 +1456,23 @@ bool GICBSSearch::runGICBSSearch()
         }
 
         curr->clear();
-        t1 = std::clock();
+        t1 = clock();
         if (open_list.empty())
         {
             solution_found = false;
             break;
         }
-        runtime_listoperation += std::clock() - t1;
-
+        runtime_listoperation += clock() - t1;
     }  // end of while loop
 
     if (open_list.empty() && solution_cost < 0 && !(runtime > TIME_LIMIT))
     {
         solution_cost = -2;
-        cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val << " ; " <<
-             HL_num_expanded << " ; " << HL_num_generated << " ; " <<
-             LL_num_expanded << " ; " << LL_num_generated << " ; " << runtime / CLOCKS_PER_SEC << " ; " <<
-             "|Open|=" << open_list.size() << endl;
+        cout << "No solutions  ; " << solution_cost << " ; " << min_f_val - dummy_start->g_val <<
+            " ; HL exp(gen)=" << HL_num_expanded << "(" << HL_num_generated << ") ; " << 
+            " ; LL exp(gen)=" << LL_num_expanded << "(" << LL_num_generated << ") ; " << 
+            "Runtime=" << runtime / CLOCKS_PER_SEC << " ; " <<
+            "|Open|=" << open_list.size() << endl;
         solution_found = false;
     }
     return solution_found;
@@ -1670,7 +1483,7 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
                          constraint_strategy c, bool fixed_prior, int scr, int mode) : 
                          fixed_prior(fixed_prior), focal_w(f_w), screen(scr), conf_select_mode(mode)
 {
-    clock_t start_t = std::clock();
+    clock_t start_t = clock();
 
     if (screen > 0)
     {
@@ -1680,7 +1493,6 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
     }
 
     cons_strategy = c;
-    //focal_w = f_w;
     HL_num_expanded = 0;
     HL_num_generated = 0;
     LL_num_expanded = 0;
@@ -1691,10 +1503,6 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
     map_size = ml.rows * ml.cols;
     solution_found = false;
     solution_cost = -1;
-    //ll_min_f_vals = vector <double>(num_of_agents);
-    //paths_costs = vector <double>(num_of_agents);
-    //ll_min_f_vals_found_initially = vector <double>(num_of_agents);
-    //paths_costs_found_initially = vector <double>(num_of_agents);
     search_engines = vector<SingleAgentICBS*>(num_of_agents);
     for (int i = 0; i < num_of_agents; i++)
     {
@@ -1715,15 +1523,14 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
     paths.resize(num_of_agents, NULL);
     paths_found_initially.resize(num_of_agents);
 
-    //std::random_device rd();
-    std::mt19937 g(123 /*rd()*/);  // constant seed TODO: Feed it the seed parameter.
+    mt19937 g(123);  // constant seed TODO: Feed it the seed parameter.
 
     if (fixed_prior)
     {
         int iteration = 0;
         while (true)
         {
-            runtime = (std::clock() - start_t);
+            runtime = (clock() - start_t);
             if (runtime > TIME_LIMIT)
             {
                 cout << "NO SOLUTION EXISTS AFTER " << iteration << " ITERATIONS";
@@ -1745,13 +1552,12 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
             {
                 ordering[i] = i;
             }
-            std::shuffle(ordering.begin(), ordering.end(), g);
+            shuffle(ordering.begin(), ordering.end(), g);
 
             // Go over agents in decreasing order of priority
             for (int i = 0; i < num_of_agents; i++)
             {
                 int a = ordering[i];
-                // num_single_pathfinding++;
                 if (!search_engines[a]->findPath(paths_found_initially[a], f_w, dummy_start->trans_priorities, paths,
                                                  dummy_start->makespan + 1, 0))
                 {
@@ -1782,13 +1588,6 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
         dummy_start->trans_priorities = vector<vector<bool>>(num_of_agents, vector<bool>(num_of_agents, false));
         for (int i = 0; i < num_of_agents; i++)
         {
-            //    cout << "Computing initial path for agent " << i << endl; fflush(stdout);
-            //bool* res_table = new bool[map_size * (dummy_start->makespan + 1)]();  // initialized to false
-            //bool* res_table_low_prio = new bool[map_size * (dummy_start->makespan + 1)]();  // initialized to false
-            //updateReservationTable(res_table, res_table_low_prio, i, *dummy_start);
-            //cout << "*** CALCULATING INIT PATH FOR AGENT " << i << ". Reservation Table[MAP_SIZE x MAX_PLAN_LEN]: " << endl;
-            //printResTable(res_table, max_plan_len);
-            // num_single_pathfinding++;
             if (!search_engines[i]->findPath(paths_found_initially[i], f_w, dummy_start->trans_priorities, paths,
                                              dummy_start->makespan + 1, 0))
             {
@@ -1796,21 +1595,12 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
                 solution_cost = -2;
                 break;
             }
-            //dummy_start->paths[i] = search_engines[i]->getPath();
             paths[i] = &paths_found_initially[i];
             dummy_start->makespan = max(dummy_start->makespan, paths_found_initially[i].size() - 1);
-            //search_engines[i]->path.reset();
-            //ll_min_f_vals_found_initially[i] = search_engines[i]->min_f_val;
-            //paths_costs_found_initially[i] = search_engines[i]->path_cost;
             LL_num_expanded += search_engines[i]->num_expanded;
             LL_num_generated += search_engines[i]->num_generated;
-            //delete[] res_table;
-            //    cout << endl;
         }
     }
-
-    //ll_min_f_vals = ll_min_f_vals_found_initially;
-    //paths_costs = paths_costs_found_initially;
 
     if (solution_cost != -2)
     {
@@ -1819,30 +1609,15 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
             dummy_start->g_val += paths[i]->size() - 1;
         dummy_start->h_val = 0;
         dummy_start->f_val = dummy_start->g_val;
-        //dummy_start->ll_min_f_val = 0;
         dummy_start->depth = 0;
-        // dummy_start->is_ag_inlist = vector<bool>(num_of_agents, false);
-        // dummy_start->ag_conflict_free = vector<bool>(num_of_agents, false);
-
         dummy_start->open_handle = open_list.push(dummy_start);
-        //dummy_start->focal_handle = focal_list.push(dummy_start);
-        //dummy_start->single.resize(num_of_agents);
-        //dummy_start->constraints.resize(num_of_agents);
         HL_num_generated++;
         dummy_start->time_generated = HL_num_generated;
         allNodes_table.emplace_back(dummy_start);
-        // findConflicts(*dummy_start);  // TODO: Should we add the time this takes to runtime_conflictdetection?
-                                         //       It would mean it would slightly overlap with pre_runtime.
-        //initial_g_val = dummy_start->g_val;
         min_f_val = dummy_start->f_val;
-        focal_list_threshold = min_f_val * focal_w;
-
-        //  cout << "Paths in START (high-level) node:" << endl;
-        //  printPaths();
-        // cout << "SUM-MIN-F-VALS: " << dummy_start->sum_min_f_vals << endl;
     }
 
-    pre_runtime = std::clock() - start_t;
+    pre_runtime = clock() - start_t;
 }
 
 inline void GICBSSearch::releaseOpenListNodes()
@@ -1859,13 +1634,6 @@ GICBSSearch::~GICBSSearch()
 {
     for (size_t i = 0; i < search_engines.size(); i++)
         delete (search_engines[i]);
-    //for (size_t i = 0; i < paths_found_initially.size(); i++)
-    //	delete (paths_found_initially[i]);
-    //  for (size_t i=0; i<paths.size(); i++)
-    //    delete (paths[i]);
-    // releaseOpenListNodes();
-    //delete (empty_node);
-    //delete (deleted_node);
 }
 
 void GICBSSearch::getBranchEval(GICBSNode* n)
@@ -1889,16 +1657,16 @@ void GICBSSearch::getBranchEval(GICBSNode* n)
     }
 
     // Reverse
-    std::reverse(br_max_ma_size->begin(), br_max_ma_size->end());
-    std::reverse(br_node_idx->begin(), br_node_idx->end());
-    std::reverse(br_node_soc->begin(), br_node_soc->end());
+    reverse(br_max_ma_size->begin(), br_max_ma_size->end());
+    reverse(br_node_idx->begin(), br_node_idx->end());
+    reverse(br_node_soc->begin(), br_node_soc->end());
     return;
 }
 
 void GICBSSearch::saveEval(void)
 {
     ofstream stats;
-	stats.open("iteration_data.txt", std::ios::out);
+	stats.open("iteration_data.txt", ios::out);
 	if (!stats.is_open())
 	{
 		cout << "Failed to open file." << endl;
@@ -1906,13 +1674,13 @@ void GICBSSearch::saveEval(void)
 	else
 	{
         stats << "br_node_idx,";
-		std::copy(br_node_idx->begin(), br_node_idx->end(), std::ostream_iterator<double>(stats, ","));
+		copy(br_node_idx->begin(), br_node_idx->end(), ostream_iterator<double>(stats, ","));
 		stats << endl;
 		stats << "br_node_soc,";
-		std::copy(br_node_soc->begin(), br_node_soc->end(), std::ostream_iterator<int>(stats, ","));
+		copy(br_node_soc->begin(), br_node_soc->end(), ostream_iterator<int>(stats, ","));
 		stats << endl;
 		stats << "br_max_ma_size,";
-		std::copy(br_max_ma_size->begin(), br_max_ma_size->end(), std::ostream_iterator<double>(stats, ","));
+		copy(br_max_ma_size->begin(), br_max_ma_size->end(), ostream_iterator<double>(stats, ","));
 		stats << endl;
     }
 }

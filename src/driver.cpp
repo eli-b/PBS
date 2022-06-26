@@ -1,7 +1,6 @@
 ﻿#include "map_loader.h"
 #include "agents_loader.h"
 #include "egraph_reader.h"
-//#include "ecbs_search.h"
 #include "GICBSSearch.h"
 
 #include <string>
@@ -10,7 +9,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
-// #include "ecbs_node.h"
 #include <cstdlib>
 #include <cmath>
 
@@ -70,9 +68,6 @@ int main(int argc, char** argv)
     bool res;
     res = icbs.runGICBSSearch();
 
-    cout << "single agent path finding called: " << icbs.num_single_pathfinding << endl;
-
-
     if (!icbs.node_stat.empty())
     {
         ofstream stats;
@@ -94,12 +89,11 @@ int main(int argc, char** argv)
     {
         ofstream addHeads(vm["output"].as<string>());
         addHeads << "runtime,#high-level expanded,#high-level generated,#low-level expanded,#low-level generated," <<
-                 "solution cost," <<
-                 "#pathfinding," <<
-                 "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime,"
+                 "solution cost,root g value,#pathfinding," <<
+                 "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime," <<
                  "updatecons runtime,updatepaths runtime," <<
-                 "orig agent failed,another agent failed,solver name,instance name,"
-                 "#agents,max_ma_size,num_ex_conf,num_in_conf,num_total_conf,"
+                 "orig agent failed,another agent failed,solver name,instance name," <<
+                 "#agents,max_ma_size,num_ex_conf,num_in_conf,num_total_conf," <<
                  "num_0child,num_1child,num_2child" << endl;
         addHeads.close();
     }
@@ -108,7 +102,8 @@ int main(int argc, char** argv)
     stats << icbs.runtime / CLOCKS_PER_SEC << "," <<
           icbs.HL_num_expanded << "," << icbs.HL_num_generated << "," <<
           icbs.LL_num_expanded << "," << icbs.LL_num_generated << "," <<
-          icbs.solution_cost << "," << icbs.num_single_pathfinding << "," <<
+          icbs.solution_cost << "," << icbs.dummy_start->g_val << "," <<
+          icbs.num_single_pathfinding << "," <<
           icbs.pre_runtime / CLOCKS_PER_SEC << "," << icbs.runtime_computeh / CLOCKS_PER_SEC << "," <<
           icbs.runtime_conflictdetection / CLOCKS_PER_SEC << "," << icbs.runtime_listoperation / CLOCKS_PER_SEC << "," <<
           icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_updatecons / CLOCKS_PER_SEC << "," <<
