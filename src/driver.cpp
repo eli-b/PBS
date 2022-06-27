@@ -35,8 +35,10 @@ int main(int argc, char** argv)
             ("output,o", po::value<std::string>()->required(), "output file for schedule")
             ("agentNum,k", po::value<int>()->default_value(0), "number of agents")
             ("seed,s", po::value<int>()->default_value(123), "random seed")
-            ("debug,d", po::value<int>()->default_value(0), "debug mode (0: Nothing shown, 1: branch analysis)")
-            ("conf,c", po::value<int>()->default_value(0), "conflict select mode (0:original, 2:new)")
+            ("debug,d", po::value<int>()->default_value(0), 
+                "debug mode (see README.md for more explenation)")
+            ("conf,c", po::value<int>()->default_value(0), 
+                "conflict select mode (see README.md for more explenation)")
             ("fixedOrder,f", po::value<bool>()->default_value(true),
              "fixed order. true->Prioritized Search, false->PBS");
 
@@ -90,7 +92,7 @@ int main(int argc, char** argv)
         ofstream addHeads(vm["output"].as<string>());
         addHeads << "runtime,#high-level expanded,#high-level generated,#low-level expanded,#low-level generated," <<
                  "solution cost,root g value,#pathfinding," <<
-                 "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime," <<
+                 "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime,gen child runtime," <<
                  "updatecons runtime,updatepaths runtime," <<
                  "orig agent failed,another agent failed,solver name,instance name," <<
                  "#agents,max_ma_size,num_ex_conf,num_in_conf,num_total_conf," <<
@@ -106,8 +108,8 @@ int main(int argc, char** argv)
           icbs.num_single_pathfinding << "," <<
           icbs.pre_runtime / CLOCKS_PER_SEC << "," << icbs.runtime_computeh / CLOCKS_PER_SEC << "," <<
           icbs.runtime_conflictdetection / CLOCKS_PER_SEC << "," << icbs.runtime_listoperation / CLOCKS_PER_SEC << "," <<
-          icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_updatecons / CLOCKS_PER_SEC << "," <<
-          icbs.runtime_updatepaths / CLOCKS_PER_SEC << "," <<
+          icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_gen_child / CLOCKS_PER_SEC  << "," << 
+          icbs.runtime_updatecons / CLOCKS_PER_SEC << "," << icbs.runtime_updatepaths / CLOCKS_PER_SEC << "," <<
           icbs.agent_itself_failed << "," << icbs.lower_priority_agent_failed <<
           ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << "," << 
           icbs.max_ma_size << "," << icbs.num_ex_conf << "," << icbs.num_in_conf << "," << icbs.num_total_conf << "," <<

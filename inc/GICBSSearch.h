@@ -18,6 +18,7 @@ public:
     double pre_runtime = 0;
     double runtime_lowlevel;
     double runtime_conflictdetection;
+    double runtime_gen_child;
     double runtime_computeh;
     double runtime_listoperation;
     double runtime_updatepaths;
@@ -25,7 +26,8 @@ public:
     uint64_t agent_itself_failed = 0;
     uint64_t lower_priority_agent_failed = 0;
     list<tuple<int, int, int, int, int, int, int>> node_stat;
-    typedef boost::heap::pairing_heap<GICBSNode*, boost::heap::compare<GICBSNode::compare_node>> heap_open_t;  // Note the heap only gives preference to higher depth, making it not a heap but a kind of stack
+    // Note the heap only gives preference to higher depth, making it not a heap but a kind of stack
+    typedef boost::heap::pairing_heap<GICBSNode*, boost::heap::compare<GICBSNode::compare_node>> heap_open_t;
 
     heap_open_t open_list;
     list<std::unique_ptr<GICBSNode>> allNodes_table;
@@ -71,56 +73,49 @@ public:
     vector<vector<PathEntry>> paths_found_initially;  // contain initial paths found
 
     vector<SingleAgentICBS*> search_engines;  // used to find (single) agents' paths and mdd
+
+    GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr, constraint_strategy c,
+                bool fixed_prior=false, int scr=0, int mode=0);
+    ~GICBSSearch();
+
     bool runGICBSSearch();
-
     bool findPathForSingleAgent(GICBSNode* node, int ag, double lowerbound = 0);
-
     bool generateChild(GICBSNode* child, GICBSNode* curr);
-
     inline void updatePaths(GICBSNode* curr);
     vector<vector<PathEntry>> copyPaths(const GICBSNode* curr);
 
     // bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
     shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, 
         size_t start_t=0, size_t end_t=SIZE_MAX);
-    void findConflictsOri(GICBSNode& curr, bool is_eval=false);
-    void findConflictsminTimestep(GICBSNode& curr, bool is_eval=false);
+    void findConflicts(GICBSNode& curr);
+    void findConflictsOri(GICBSNode& curr);
+    void findConflictsRandom(GICBSNode& curr);
+    void findConflictsminTimestep(GICBSNode& curr);
     void findConflictswithMinMA(GICBSNode& curr);
     void findConflictswithMaxMA(GICBSNode& curr);
-    void findConflictswithMaxEarliestConf(GICBSNode& curr);
     void findConflictsBFS(GICBSNode& curr);
     void findConflictsDFS(GICBSNode& curr);
     void findConflictswithMinConstraints(GICBSNode& curr);
     void findConflictswithMaxConstraints(GICBSNode& curr);
-    void findConflictsRandom(GICBSNode& curr, bool is_eval=false);
-    void findConflicts(GICBSNode& curr);
+    // void findConflictswithMaxEarliestConf(GICBSNode& curr);
+
     bool isCollide(int a1, int a2);
     bool isPathsValid(GICBSNode* curr);
 
     set<int> findMetaAgent(const GICBSNode& curr, int ag, size_t size_th=SIZE_MAX);
 
     int countCollidingPairs();
-
-    //inline bool updateGICBSNode(GICBSNode* leaf_node, GICBSNode* root_node);
-    //inline void updatePaths(GICBSNode* curr, GICBSNode* root_node);
-    //void generateChildwithCurrentCost(GICBSNode* n1, const GICBSNode* curr);
     inline int compute_g_val();
 
     inline int getAgentLocation(int agent_id, size_t timestep);
-
     int getNumConstraints(const GICBSNode& curr, int a1, int a2);
 
-    void updateFocalList(double old_lower_bound, double new_lower_bound, double f_weight);
-
-    //void updateReservationTable(bool* res_table, bool* res_table_low_prio, int exclude_agent, const GICBSNode &node);
     inline void releaseClosedListNodes();
-
     inline void releaseOpenListNodes();
 
     void printPaths() const;
     void printAgentPath(int ag) const;
     void printAgentPath(int ag, const vector<PathEntry>& in_path) const;
-
     void printConflicts(const GICBSNode& n) const
     {
         cout << "<a1:" << get<0>(*n.conflict) << ", a2:" << get<1>(*n.conflict) << 
@@ -130,9 +125,4 @@ public:
 
     void getBranchEval(GICBSNode* n);
     void saveEval(void);
-
-    GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr, constraint_strategy c,
-                bool fixed_prior=false, int scr=0, int mode=0);
-
-    ~GICBSSearch();
 };

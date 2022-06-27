@@ -66,6 +66,7 @@ public:
     std::shared_ptr<Conflict> conflict;
     int agent_id;
     list<pair<int, vector<PathEntry>>> new_paths;
+    vector<vector<bool>> priorities;
 
     int g_val;
     int h_val;
@@ -77,11 +78,7 @@ public:
     uint64_t time_expanded;
     uint64_t time_generated;
 
-    vector<vector<bool>> priorities;
-    vector<vector<bool>> trans_priorities;
-
-    // This is for BFS conflict selection
-    list<int> ag_open_list;
+    list<int> ag_open_list;  // This is for BFS/DFS conflict selection
     inline bool isInOpen(int ag)
     {
         return find(ag_open_list.begin(), ag_open_list.end(), ag) != ag_open_list.end();
