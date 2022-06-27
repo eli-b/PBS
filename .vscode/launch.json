@@ -24,8 +24,8 @@
                 "-o${workspaceFolder}/result_debug.csv", 
                 "-k100",
                 "-f", "false",
-                "-d", "0",
-                "-c", "0"
+                "-d", "1",
+                "-c", "1"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

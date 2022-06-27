@@ -5,6 +5,9 @@
 #include "compute_heuristic.h"
 #include "agents_loader.h"
 
+#define DEBUG_LOG_BRANCH_ANALYSIS 0
+#define DEBUG_LOG_EXPANSION 1
+#define DEBUG_LOG_DETAILED 2
 
 class GICBSSearch
 {
@@ -80,12 +83,13 @@ public:
     // bool findAgentsConflicts(GICBSNode& curr, int a1, int a2, uint64_t num=1, size_t start_t=0);
     shared_ptr<Conflict> findEarliestConflict(GICBSNode& curr, int a1, int a2, 
         size_t start_t=0, size_t end_t=SIZE_MAX);
-    void findConflictsOri(GICBSNode& curr);
+    void findConflictsOri(GICBSNode& curr, bool is_eval=false);
     void findConflictsminTimestep(GICBSNode& curr, bool is_eval=false);
     void findConflictswithMinMA(GICBSNode& curr);
     void findConflictswithMaxMA(GICBSNode& curr);
     void findConflictswithMaxEarliestConf(GICBSNode& curr);
     void findConflictsBFS(GICBSNode& curr);
+    void findConflictsDFS(GICBSNode& curr);
     void findConflictswithMinConstraints(GICBSNode& curr);
     void findConflictswithMaxConstraints(GICBSNode& curr);
     void findConflictsRandom(GICBSNode& curr, bool is_eval=false);
@@ -123,8 +127,6 @@ public:
         ", v1:" << get<2>(*n.conflict) << ", v2:" << get<3>(*n.conflict) << 
         ", t:" << get<4>(*n.conflict) << ">" << endl;
     }
-
-    void printConstraints(const GICBSNode* n) const;
 
     void getBranchEval(GICBSNode* n);
     void saveEval(void);

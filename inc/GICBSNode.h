@@ -65,8 +65,6 @@ public:
     GICBSNode* parent;
     std::shared_ptr<Conflict> conflict;
     int agent_id;
-    tuple<int, int, int, bool> constraint; // <int loc1, int loc2, int timestep, bool positive_constraint> NOTE loc2 = -1 for vertex constraint; loc2 = loation2 for Edge Constraint
-                                           // Currently we only generate negative constraints
     list<pair<int, vector<PathEntry>>> new_paths;
 
     int g_val;
