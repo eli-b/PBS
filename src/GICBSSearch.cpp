@@ -1125,10 +1125,8 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
         }
         else
         {
-            if (curr_agent == node->agent_id)
-                ++agent_itself_failed;
-            else
-                ++lower_priority_agent_failed;
+            if (curr_agent == node->agent_id) agent_itself_failed ++;
+            else lower_priority_agent_failed ++;
             return false;
         }
     }
@@ -1140,7 +1138,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
             if (!new_paths[i].empty())
             {
                 node->new_paths.push_back(make_pair(i, new_paths[i]));
-                paths[i] = &node->new_paths.back().second; // make sure paths[i] gets the correct pointer
+                paths[i] = &node->new_paths.back().second; // make sure i gets the correct pointer
                 debug_ag.push_back(i);
             }
         }
@@ -1330,7 +1328,7 @@ bool GICBSSearch::runGICBSSearch()
 
         if (curr->conflict == nullptr) // Fail to find a conflict => no conflicts
         {   // found a solution (and finish the while loop)
-            runtime = (clock() - start) + pre_runtime; // / (double) CLOCKS_PER_SEC;
+            runtime = (clock() - start) + pre_runtime;
             solution_found = true;
             solution_cost = curr->g_val;
 
@@ -1395,9 +1393,12 @@ bool GICBSSearch::runGICBSSearch()
         {
             GICBSNode* n1 = new GICBSNode();
             n1->agent_id = conf_a1;
-            n1->ag_open_list = curr->ag_open_list;
-            if (!n1->isInOpen(conf_a2)) n1->ag_open_list.push_back(conf_a2);
-            if (!n1->isInOpen(conf_a1)) n1->ag_open_list.push_back(conf_a1);
+            if (conf_select_mode == 5 || conf_select_mode == 6)
+            {
+                n1->ag_open_list = curr->ag_open_list;
+                if (!n1->isInOpen(conf_a2)) n1->ag_open_list.push_back(conf_a2);
+                if (!n1->isInOpen(conf_a1)) n1->ag_open_list.push_back(conf_a1);
+            }
 
             n1->priorities = vector<vector<bool>>(curr->priorities);
             list<int> high_pri = list<int>({conf_a2});
@@ -1436,9 +1437,13 @@ bool GICBSSearch::runGICBSSearch()
         {
             GICBSNode* n2 = new GICBSNode();
             n2->agent_id = conf_a2;
-            n2->ag_open_list = curr->ag_open_list;
-            if (!n2->isInOpen(conf_a1)) n2->ag_open_list.push_back(conf_a1);
-            if (!n2->isInOpen(conf_a2)) n2->ag_open_list.push_back(conf_a2);
+
+            if (conf_select_mode == 5 || conf_select_mode == 6)
+            {
+                n2->ag_open_list = curr->ag_open_list;
+                if (!n2->isInOpen(conf_a1)) n2->ag_open_list.push_back(conf_a1);
+                if (!n2->isInOpen(conf_a2)) n2->ag_open_list.push_back(conf_a2);
+            }
 
             n2->priorities = vector<vector<bool>>(curr->priorities);
             list<int> high_pri = list<int>({conf_a1});
@@ -1462,7 +1467,8 @@ bool GICBSSearch::runGICBSSearch()
                 if (screen > DEBUG_LOG_EXPANSION) cout << "Success!" << endl;
                 HL_num_generated++;
                 n2->time_generated = HL_num_generated;
-                if (conf_select_mode == 7 || conf_select_mode == 8) n2->depth ++;  // n2 gets expanded earlier than n1
+                if (conf_select_mode == 7 || conf_select_mode == 8) 
+                    n2->depth ++;  // n2 gets expanded earlier than n1
                 n2->open_handle = open_list.push(n2);  // update handles
                 allNodes_table.emplace_back(n2);
             }
@@ -1692,17 +1698,15 @@ void GICBSSearch::saveEval(void)
 	if (!stats.is_open())
 	{
 		cout << "Failed to open file." << endl;
+        return;
 	}
-	else
-	{
-        stats << "br_node_idx,";
-		copy(br_node_idx->begin(), br_node_idx->end(), ostream_iterator<double>(stats, ","));
-		stats << endl;
-		stats << "br_node_soc,";
-		copy(br_node_soc->begin(), br_node_soc->end(), ostream_iterator<int>(stats, ","));
-		stats << endl;
-		stats << "br_max_ma_size,";
-		copy(br_max_ma_size->begin(), br_max_ma_size->end(), ostream_iterator<double>(stats, ","));
-		stats << endl;
-    }
+    stats << "br_node_idx,";
+    copy(br_node_idx->begin(), br_node_idx->end(), ostream_iterator<double>(stats, ","));
+    stats << endl;
+    stats << "br_node_soc,";
+    copy(br_node_soc->begin(), br_node_soc->end(), ostream_iterator<int>(stats, ","));
+    stats << endl;
+    stats << "br_max_ma_size,";
+    copy(br_max_ma_size->begin(), br_max_ma_size->end(), ostream_iterator<double>(stats, ","));
+    stats << endl;
 }
