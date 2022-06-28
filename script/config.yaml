@@ -1,28 +1,44 @@
-exp_path: "/home/rdaneel/my_exp_socs2022/"
+exp_path: "/home/rdaneel/my_exp_PBS0627/"
+# exp_path: "/home/rdaneel/my_exp_socs2022/"
 # exp_path: "/home/rdaneel/my_exp/"
 ins_num: 25
 time_limit: 60
-set_title: false
+set_title: true
 set_legend: false
 plot_ci: false
 plot_std: false
 
 maps:
-  - name: "random-32-32-20"
-    label: Random
+  # - name: "random-32-32-20"
+  #   label: Random
+  #   scens:
+  #     - even
+  #     - random
+  #   num_of_agents:
+  #     - 20
+  #     - 40
+  #     - 60
+  #     - 80
+  #     - 100
+
+  - name: "warehouse-20-40-10-2-1"
+    label: Warehouse
     scens:
       - even
+      - random
     num_of_agents:
       - 20
       - 40
       - 60
       - 80
       - 100
+      - 120
 
-  # - name: "warehouse-20-40-10-2-1"
-  #   label: Warehouse
+  # - name: "den520d"
+  #   label: Den520d
   #   scens:
   #     - even
+  #     - random
   #   num_of_agents:
   #     - 20
   #     - 40
@@ -35,6 +51,7 @@ maps:
   #   label: Maze
   #   scens:
   #     - even
+  #     - random
   #   num_of_agents:
   #     - 10
   #     - 20
@@ -47,6 +64,7 @@ maps:
   #   label: Room
   #   scens:
   #     - even
+  #     - random
   #   num_of_agents:
   #     - 10
   #     - 20
@@ -62,38 +80,43 @@ solvers:
   #   label: "PBS"
   #   color: "grey"
   #   marker: "P"
-  
-  # - name: "PBS1"
-  #   label: "PBS(First)"
-  #   color: "purple"
-  #   marker: "d"
-  
-  # - name: "PBS1a"
-  #   label: "PBS(First)"
-  #   color: "purple"
-  #   marker: "d"
-  
-  # - name: "PBS6"
-  #   label: "PBS(Earliest)"
+
+  - name: "PBS1"
+    label: "PBS(Random)"
+    color: "purple"
+    marker: "d"
+
+  - name: "PBS2"
+    label: "PBS(Earliest)"
+    color: "gold"
+    marker: "<"
+
+  # - name: "PBS3"
+  #   label: "PBS(Min PA)"
   #   color: 'deepskyblue'
   #   marker: 'o'
 
-  - name: "PBS6a"
-    label: "PBS(Earliest)"
-    color: 'deepskyblue'
-    marker: 'o'
-
-  # - name: "PBS2"
-  #   label: "PBS(Smallest)"
+  # - name: "PBS4"
+  #   label: "PBS(Max PA)"
   #   color: 'green'
   #   marker: 's'
 
-  # - name: "PBS4"
-  #   label: "PBS(Largest w/o Internal first)"
-  #   color: 'purple'
-  #   marker: '>'
-
-  # - name: "PBS3"
-  #   label: "PBS(Largest)"
+  # - name: "PBS5"
+  #   label: "PBS(BFS)"
   #   color: 'orange'
-  #   marker: '^'
+  #   marker: '*'
+
+  # - name: "PBS6"
+  #   label: "PBS(DFS)"
+  #   color: 'pink'
+  #   marker: 'H'
+
+  - name: "PBS7"
+    label: "PBS(Min cons)"
+    color: 'red'
+    marker: '^'
+
+  - name: "PBS8"
+    label: "PBS(Max cons)"
+    color: 'brown'
+    marker: 'X'

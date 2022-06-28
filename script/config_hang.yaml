@@ -1,9 +1,10 @@
-exp_path: "/home/rdaneel/my_exp_socs2022/"
+exp_path: "/home/rdaneel/my_exp_PBS0627/"
+# exp_path: "/home/rdaneel/my_exp_socs2022/"
 # exp_path: "/home/rdaneel/my_exp/"
 ins_num: 50
 time_limit: 60
 set_title: true
-set_legend: true
+set_legend: false
 plot_ci: false
 plot_std: false
 
@@ -38,22 +39,8 @@ maps:
   #     - 90
   #     - 100
 
-  # - name: "brc202d"
-  #   label: brc202d
-  #   scens:
-  #     - hang
-  #   num_of_agents:
-  #     - 20
-  #     - 40
-  #     - 60
-  #     - 80
-  #     - 100
-  #     - 120
-  #     - 140
-  #     - 160
-
-  - name: "lak503d"
-    label: lak503d
+  - name: "brc202d"
+    label: brc202d
     scens:
       - hang
     num_of_agents:
@@ -62,44 +49,63 @@ maps:
       - 60
       - 80
       - 100
+      - 120
+      - 140
+      - 160
+
+  # - name: "lak503d"
+  #   label: lak503d
+  #   scens:
+  #     - hang
+  #   num_of_agents:
+  #     - 20
+  #     - 40
+  #     - 60
+  #     - 80
+  #     - 100
 
 solvers:
   # - name: "PBS0"
   #   label: "PBS"
   #   color: "grey"
   #   marker: "P"
-  
-  # - name: "PBS1"
-  #   label: "PBS(First)"
-  #   color: "purple"
-  #   marker: "d"
 
-  # - name: "PBS1a"
-  #   label: "PBS(First)"
-  #   color: "purple"
-  #   marker: "d"
-  
-  # - name: "PBS6"
-  #   label: "PBS(Earliest)"
+  - name: "PBS1"
+    label: "PBS(Random)"
+    color: "purple"
+    marker: "d"
+
+  - name: "PBS2"
+    label: "PBS(First)"
+    color: "gold"
+    marker: "<"
+
+  # - name: "PBS3"
+  #   label: "PBS(Min PA)"
   #   color: 'deepskyblue'
   #   marker: 'o'
 
-  - name: "PBS6a"
-    label: "PBS(Earliest)"
-    color: 'deepskyblue'
-    marker: 'o'
- 
-  - name: "PBS2"
-    label: "PBS(Smallest)"
-    color: 'green'
-    marker: 's'
-
   # - name: "PBS4"
-  #   label: "PBS(Largest w/o Internal first)"
-  #   color: 'purple'
-  #   marker: '>'
+  #   label: "PBS(Max PA)"
+  #   color: 'green'
+  #   marker: 's'
 
-  - name: "PBS3"
-    label: "PBS(Largest)"
-    color: 'orange'
+  # - name: "PBS5"
+  #   label: "PBS(BFS)"
+  #   color: 'orange'
+  #   marker: '*'
+
+  # - name: "PBS6"
+  #   label: "PBS(DFS)"
+  #   color: 'pink'
+  #   marker: 'H'
+
+  - name: "PBS7"
+    label: "PBS(Min cons)"
+    color: 'red'
     marker: '^'
+
+  - name: "PBS8"
+    label: "PBS(Max cons)"
+    color: 'brown'
+    marker: 'X'

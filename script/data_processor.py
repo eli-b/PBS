@@ -2,14 +2,11 @@
 # -*- coding: UTF-8 -*-
 """Data processor"""
 
-import enum
 import logging
-from operator import index
 import os
+import sys
 import argparse
 from typing import Dict, List, Tuple
-import pprint
-from sqlalchemy import false, true
 import yaml
 import matplotlib.pyplot as plt
 import util
@@ -24,10 +21,10 @@ class DataProcessor:
 
         # Plot parameters
         self.max_x_num = 5  # on the x-axis
-        self.fig_size:Tuple[int,int] = (12, 9) #(17, 8)
+        self.fig_size:Tuple[int,int] = (12, 9) # (17, 8)
         self.marker_size:int = 25
-        self.line_width:float = 4.0
-        self.mark_width:float = 4.0  # 4.0
+        self.line_width:float = 0.0 # 4.0
+        self.mark_width:float = 4.0
         self.text_size:int = 40
         self.fig_axs:Dict[int, Tuple[int,int]] = {1: (1,1),
                                                   2: (1,2),
@@ -40,12 +37,12 @@ class DataProcessor:
         self.y_labels:Dict[str, str] = {'succ': 'Success Rate',
                                         'runtime': 'Runtime (sec)',
                                         'solution cost': 'SoC',
-                                        'max_ma_size': 'Max MA Size',
-                                        '#low-level generated': '# Generated LL Nodes (M)',
+                                        'max_ma_size': 'Max PA Size',
+                                        '#low-level generated': '# Generated LL Nodes (M)',  # (M)
                                         '#low-level expanded': '# Expanded LL nodes (M)',
                                         '#high-level generated': '# Generated HL Nodes',
                                         '#high-level expanded': '# Expanded HL nodes (K)',
-                                        '#pathfinding': '# Replaned Agents (K)',
+                                        '#pathfinding': '# Replaned Agents', # (K)
                                         'num_in_conf': 'Internal / Total',
                                         'num_ex_conf': 'External / Total',
                                         'num_total_conf': '# Total Conflicts (K)',
@@ -70,13 +67,13 @@ class DataProcessor:
         return f_idx // f_row, f_idx % f_row
 
 
-    def get_val(self, x_index:str='num', y_index:str='succ', is_avg:bool=true):
+    def get_val(self, x_index:str='num', y_index:str='succ', is_avg:bool=True):
         """Get the value on the y axid
 
         Args:
             x_index (str, optional): value of the x-axid. Defaults to 'num'.
             y_index (str, optional): value of the y-axid. Defaults to 'succ'.
-            is_avg (bool, optional): whether to averaging the y value. Defaults to true.
+            is_avg (bool, optional): whether to averaging the y value. Defaults to True.
 
         Returns:
             Dict: the y value on the y axid
@@ -141,7 +138,7 @@ class DataProcessor:
         return result
 
 
-    def get_num_val(self, in_index:str='succ', is_avg:bool=true):
+    def get_num_val(self, in_index:str='succ', is_avg:bool=True):
         """Compute the success rate versus the numbers of agents
 
         Args:
@@ -211,7 +208,7 @@ class DataProcessor:
         return result
 
 
-    def get_w_val(self, in_index:str, is_avg:bool=true):
+    def get_w_val(self, in_index:str, is_avg:bool=True):
         """Compute the success rate versus the numbers of agents
 
         Args:
@@ -348,7 +345,7 @@ class DataProcessor:
 
         elif y_index == '#low-level generated':
             label_scale = 1000000
-            tmp_range = 2
+            tmp_range = 1
             scale = label_scale * tmp_range
             y_list = np.arange(0, max(y_list)+5, scale)
             in_axs.axes.set_yticks(y_list)
@@ -371,8 +368,8 @@ class DataProcessor:
         #         y_list = [str(int(y//label_scale)) for y in y_list]
 
         elif y_index == '#pathfinding':
-            label_scale = 1000
-            tmp_range = 1
+            label_scale = 1
+            tmp_range = 200
             scale = label_scale * tmp_range
             y_list = np.arange(0, max(y_list)+5, scale)
 
@@ -384,8 +381,9 @@ class DataProcessor:
 
         elif y_index == 'div':
             y_list = [0, 0.5, 1.0, 1.5]
+            # y_list = [0, 2, 4, 6, 8]
             in_axs.axes.set_yticks(y_list)
-        
+
         elif y_index == 'num_in_conf' or y_index == 'num_ex_conf':
             label_scale = 0.2
             scale = label_scale * 1
@@ -394,7 +392,7 @@ class DataProcessor:
             # y_list = np.arange(0, max(y_list)+5, scale)
             in_axs.axes.set_yticks(y_list)
             # y_list = [str(y/label_scale) for y in y_list]
-        
+
         elif y_index == 'num_total_conf':
             label_scale = 1000
             tmp_range = 10
@@ -406,10 +404,10 @@ class DataProcessor:
                 y_list = [str(y/label_scale) for y in y_list]
             elif isinstance(tmp_range, int):
                 y_list = [str(int(y//label_scale)) for y in y_list]
-        
+
         elif y_index == 'num_0child':
             label_scale = 1000
-            tmp_range = 5
+            tmp_range = 1
             scale = label_scale * tmp_range
             y_list = np.arange(0, max(y_list)+5, scale)
 
@@ -418,7 +416,7 @@ class DataProcessor:
                 y_list = [str(y/label_scale) for y in y_list]
             elif isinstance(tmp_range, int):
                 y_list = [str(int(y//label_scale)) for y in y_list]
-        
+
         else:
             in_axs.axes.set_yticks(y_list)
 
@@ -555,7 +553,6 @@ class DataProcessor:
     #     in_axs.axes.set_yticklabels(y_list, fontsize=self.text_size)
     #     in_axs.set_ylabel(self.y_labels[y_index], fontsize=self.text_size)
 
-
     def plot_fig(self, x_index:str='num', y_index:str='succ'):
         # Get the result from the experiments
         result = self.get_val(x_index, y_index)
@@ -600,11 +597,11 @@ class DataProcessor:
         op_list = ['add', 'sub', 'mul', 'div', 'mod']
         if use_op not in op_list:
             logging.error('use_op is undefined!, Should be one of the {0}'.format(op_list))
-            exit(0)
+            sys.exit()
 
         # Get the result (sum) from the experiments
-        val1 = self.get_val(x_index, y_index1, false)
-        val2 = self.get_val(x_index, y_index2, false)
+        val1 = self.get_val(x_index, y_index1, False)
+        val2 = self.get_val(x_index, y_index2, False)
         x_list = val1[self.config['solvers'][0]['name']][self.config['maps'][0]['name']]['x']
 
         result = dict()
@@ -708,16 +705,17 @@ if __name__ == '__main__':
     data_processor = DataProcessor(args.config)
     # data_processor.plot_fig(x_index='num', y_index='succ')
     # data_processor.plot_fig(x_index='num', y_index='runtime')
-    data_processor.plot_fig(x_index='num', y_index='max_ma_size')
-    # data_processor.plot_fig(x_index='ins', y_index='max_ma_size')
+    # data_processor.plot_fig(x_index='num', y_index='max_ma_size')
     # data_processor.plot_fig(x_index='num', y_index='#low-level generated')
     # data_processor.plot_fig(x_index='num', y_index='#high-level generated')
     # data_processor.plot_fig(x_index='num', y_index='#pathfinding')
-    # data_processor.plot_op(x_index='ins',y_index1='#pathfinding',y_index2='#high-level generated',use_op='div')
-    # data_processor.plot_fig(x_index='ins', y_index='solution cost')
+
     # data_processor.plot_fig(x_index='ins', y_index='max_ma_size')
-    # data_processor.plot_fig(x_index='ins', y_index='#high-level generated')
+    data_processor.plot_op(x_index='ins',y_index1='#pathfinding',
+                           y_index2='#high-level generated',use_op='div')
+    # data_processor.plot_fig(x_index='ins', y_index='solution cost')
     # data_processor.plot_fig(x_index='ins', y_index='num_0child')
+
     # data_processor.plot_fig(x_index='ins', y_index='num_total_conf')
     # data_processor.plot_fig(x_index='ins', y_index='num_in_conf')
     # data_processor.plot_fig(x_index='ins', y_index='num_ex_conf')
