@@ -5,6 +5,6 @@ result_debug.csv
 iteration_data*
 run
 *.png
-hpc
+hpc*
 hpc_random
 script/__pycache__

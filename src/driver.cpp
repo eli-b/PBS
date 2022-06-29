@@ -34,7 +34,7 @@ int main(int argc, char** argv)
             ("agents,a", po::value<std::string>()->required(), "input file for agents")
             ("output,o", po::value<std::string>()->required(), "output file for schedule")
             ("agentNum,k", po::value<int>()->default_value(0), "number of agents")
-            ("seed,s", po::value<int>()->default_value(123), "random seed")
+            ("seed,s", po::value<int>()->default_value(-1), "random seed")
             ("debug,d", po::value<int>()->default_value(0), 
                 "debug mode (see README.md for more explenation)")
             ("conf,c", po::value<int>()->default_value(0), 
@@ -52,7 +52,10 @@ int main(int argc, char** argv)
     }
 
     po::notify(vm);
-    srand(vm["seed"].as<int>());
+    if (vm["seed"].as<int>() > 0)
+        srand(vm["seed"].as<int>());
+    else
+        srand(time(NULL));
 
     // read the map file and construct its two-dim array
     MapLoader ml(vm["map"].as<string>());

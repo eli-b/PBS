@@ -261,9 +261,8 @@ void GICBSSearch::findConflictsRandom(GICBSNode& curr)
 {
     curr.conflict = nullptr;  // Initialize the conflict pointer to nullptr
 
-    vector<int> new_ag;
-    for (int i = 0; i < num_of_agents; i++)
-        new_ag.push_back(i);
+    vector<int> new_ag(num_of_agents);
+    iota(new_ag.begin(), new_ag.end(), 0);
     random_shuffle(new_ag.begin(), new_ag.end());
 
     for (int a1 = 0; a1 < num_of_agents; a1++)
@@ -1152,7 +1151,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
                 if (a != debug_ag.back())
                     cout << ",";
             }
-            cout << "]";
+            cout << "] -> ";
         }
     }
     return true;
@@ -1174,7 +1173,7 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     node->f_val = node->g_val;
     if (screen > DEBUG_LOG_EXPANSION)
     {
-        cout << " -> generate node " << right << setw(3) << node->time_generated;
+        cout << " generate node " << right << setw(3) << node->time_generated;
         isPathsValid(node);  // Check if the transparent priorities agents are collision-free
     }
     runtime_gen_child += clock() - t0;
@@ -1464,7 +1463,7 @@ bool GICBSSearch::runGICBSSearch()
             gen_n2 = generateChild(n2, curr);
             if (gen_n2)
             {
-                if (screen > DEBUG_LOG_EXPANSION) cout << "Success!" << endl;
+                if (screen > DEBUG_LOG_EXPANSION) cout << " Success!" << endl;
                 HL_num_generated++;
                 n2->time_generated = HL_num_generated;
                 if (conf_select_mode == 7 || conf_select_mode == 8) 
