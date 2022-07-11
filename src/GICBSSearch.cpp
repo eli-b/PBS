@@ -747,6 +747,7 @@ void GICBSSearch::findConflictswithMinConstraints(GICBSNode& curr)
     }
     if (curr.conflict != nullptr)  // Evaluate the number external & internal conflicts
     {
+        num_total_conf++;
         set<int> ma1 = findMetaAgent(curr, get<0>(*curr.conflict));
         if (find(ma1.begin(), ma1.end(), get<1>(*curr.conflict)) != ma1.end()) num_in_conf++;
         else num_ex_conf++;
@@ -789,6 +790,7 @@ void GICBSSearch::findConflictswithMaxConstraints(GICBSNode& curr)
     }
     if (curr.conflict != nullptr)  // Evaluate the number external & internal conflicts
     {
+        num_total_conf++;
         set<int> ma1 = findMetaAgent(curr, get<0>(*curr.conflict));
         if (find(ma1.begin(), ma1.end(), get<1>(*curr.conflict)) != ma1.end()) num_in_conf++;
         else num_ex_conf++;
@@ -850,9 +852,8 @@ void GICBSSearch::findConflictsOri(GICBSNode& curr)
 
 void GICBSSearch::findConflictsminTimestep(GICBSNode& curr)
 {
-    vector<int> new_ag;
-    for (int i = 0; i < num_of_agents; i++)
-        new_ag.push_back(i);
+    vector<int> new_ag(num_of_agents);
+    iota(new_ag.begin(), new_ag.end(), 0);
     random_shuffle(new_ag.begin(), new_ag.end());
 
     curr.conflict = nullptr;
@@ -937,9 +938,9 @@ int GICBSSearch::countCollidingPairs()
                     isColliding = true;
                     break;
                 }
-                else if (timestep < min_path_length - 1
-                         && loc1 == paths[a2]->at(timestep + 1).location
-                         && loc2 == paths[a1]->at(timestep + 1).location)
+                else if (timestep < min_path_length - 1 &&
+                         loc1 == paths[a2]->at(timestep + 1).location &&
+                         loc2 == paths[a1]->at(timestep + 1).location)
                 {
                     result++;
                     isColliding = true;
@@ -1106,7 +1107,7 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
                                                // topological sort and isn't the original agent we need to find a path
                                                // for - no need to find a new path for it
         {
-            if (screen > DEBUG_LOG_DETAILED) cout << "ag " << right << setw(2) << curr_agent << " no-conf | ";
+            if (screen > DEBUG_LOG_DETAILED) cout << "ag " << right << setw(2) << curr_agent << " no-conf, ";
             continue;
         }
         size_t max_plan_len = node->makespan + 1; //getPathsMaxLength();
@@ -1131,28 +1132,17 @@ bool GICBSSearch::findPathForSingleAgent(GICBSNode* node, int ag, double lowerbo
     }
     if (foundSol)
     {
-        list<int> debug_ag;
+        if (screen > DEBUG_LOG_EXPANSION) cout << "replan: [";
         for (int i = 0; i < num_of_agents; i++)
         {
             if (!new_paths[i].empty())
             {
                 node->new_paths.push_back(make_pair(i, new_paths[i]));
                 paths[i] = &node->new_paths.back().second; // make sure i gets the correct pointer
-                debug_ag.push_back(i);
+                if (screen > DEBUG_LOG_EXPANSION) cout << right << setw(2) << i << ",";
             }
         }
-
-        if (screen > DEBUG_LOG_DETAILED)
-        {
-            cout << "replan: [";
-            for (const auto& a : debug_ag)
-            {
-                cout << right << setw(2) << a;
-                if (a != debug_ag.back())
-                    cout << ",";
-            }
-            cout << "] -> ";
-        }
+        if (screen > DEBUG_LOG_EXPANSION) cout << "] -> ";
     }
     return true;
 }
@@ -1171,11 +1161,6 @@ bool GICBSSearch::generateChild(GICBSNode* node, GICBSNode* curr)
     if (!path_found) return false;
 
     node->f_val = node->g_val;
-    if (screen > DEBUG_LOG_EXPANSION)
-    {
-        cout << " generate node " << right << setw(3) << node->time_generated;
-        isPathsValid(node);  // Check if the transparent priorities agents are collision-free
-    }
     runtime_gen_child += clock() - t0;
     return true;
 }
@@ -1224,7 +1209,6 @@ inline int GICBSSearch::compute_g_val()
 
 bool GICBSSearch::runGICBSSearch()
 {
-    node_stat.clear();
     if (screen > DEBUG_LOG_BRANCH_ANALYSIS) cout << "PBS: " << endl;
     if (solution_cost == -2)
     {
@@ -1324,6 +1308,7 @@ bool GICBSSearch::runGICBSSearch()
         t1 = clock();
         findConflicts(*curr);  // Find one conflict for expansion
         runtime_conflictdetection += clock() - t1;
+        if (screen > DEBUG_LOG_EXPANSION) printConflicts(*curr);
 
         if (curr->conflict == nullptr) // Fail to find a conflict => no conflicts
         {   // found a solution (and finish the while loop)
@@ -1378,8 +1363,6 @@ bool GICBSSearch::runGICBSSearch()
         HL_num_expanded++;
         curr->time_expanded = HL_num_expanded;
 
-        if (screen > DEBUG_LOG_EXPANSION) printConflicts(*curr);
-
         int conf_a1 = get<0>(*curr->conflict);
         int conf_a2 = get<1>(*curr->conflict);
         vector<vector<PathEntry>*> copy_paths(paths);
@@ -1416,17 +1399,28 @@ bool GICBSSearch::runGICBSSearch()
             assert(n1->priorities[conf_a2][conf_a1]);
 
             gen_n1 = generateChild(n1, curr);
+
             if (gen_n1)
             {
-                if (screen > DEBUG_LOG_EXPANSION) cout << " Success!" << endl;
                 HL_num_generated++;
                 n1->time_generated = HL_num_generated;
                 n1->open_handle = open_list.push(n1);  // update handles
                 allNodes_table.emplace_back(n1);
+                if (screen > DEBUG_LOG_EXPANSION)
+                {
+                    isPathsValid(n1);  // Check if priority-connected agents are collision-free
+                    cout << " generate node " << right << setw(3) << n1->time_generated;
+                    cout << " Success!" << endl;
+                }
             }
-            else 
+            else
             {
-                if (screen > DEBUG_LOG_EXPANSION) cout << " Failed!" << endl;
+                n1->time_generated = HL_num_generated + 1;
+                if (screen > DEBUG_LOG_EXPANSION)
+                {
+                    cout << " generate node " << right << setw(3) << n1->time_generated;
+                    cout << " Failed!" << endl;
+                }
                 delete (n1);
                 n1 = nullptr;
             }
@@ -1463,17 +1457,27 @@ bool GICBSSearch::runGICBSSearch()
             gen_n2 = generateChild(n2, curr);
             if (gen_n2)
             {
-                if (screen > DEBUG_LOG_EXPANSION) cout << " Success!" << endl;
                 HL_num_generated++;
                 n2->time_generated = HL_num_generated;
                 if (conf_select_mode == 7 || conf_select_mode == 8) 
                     n2->depth ++;  // n2 gets expanded earlier than n1
                 n2->open_handle = open_list.push(n2);  // update handles
                 allNodes_table.emplace_back(n2);
+                if (screen > DEBUG_LOG_EXPANSION)
+                {
+                    isPathsValid(n2);  // Check if priority-connected agents are collision-free
+                    cout << " generate node " << right << setw(3) << n2->time_generated;
+                    cout << " Success!" << endl;
+                }
             }
-            else 
+            else
             {
-                if (screen > DEBUG_LOG_EXPANSION) cout << " Failed!" << endl;
+                n2->time_generated = HL_num_generated + 1;
+                if (screen > DEBUG_LOG_EXPANSION)
+                {
+                    cout << " generate node " << right << setw(3) << n2->time_generated;
+                    cout << " Failed!" << endl;
+                }
                 delete (n2);
                 n2 = nullptr;
             }
@@ -1509,7 +1513,7 @@ bool GICBSSearch::runGICBSSearch()
 
 
 GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr,
-                         constraint_strategy c, bool fixed_prior, int scr, int mode) : 
+                         bool fixed_prior, int scr, int mode) : 
                          fixed_prior(fixed_prior), focal_w(f_w), screen(scr), conf_select_mode(mode)
 {
     clock_t start_t = clock();
@@ -1521,7 +1525,6 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
         br_node_idx = make_shared<vector<uint64_t>>();
     }
 
-    cons_strategy = c;
     HL_num_expanded = 0;
     HL_num_generated = 0;
     LL_num_expanded = 0;
@@ -1552,10 +1555,9 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
     paths.resize(num_of_agents, NULL);
     paths_found_initially.resize(num_of_agents);
 
-    mt19937 g(123);  // constant seed TODO: Feed it the seed parameter.
-
     if (fixed_prior)
     {
+        solver_name = "PP";
         int iteration = 0;
         while (true)
         {
@@ -1576,11 +1578,8 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
             dummy_start->priorities = vector<vector<bool>>(num_of_agents, vector<bool>(num_of_agents, false));
 
             vector<int> ordering(num_of_agents);
-            for (int i = 0; i < num_of_agents; i++)
-            {
-                ordering[i] = i;
-            }
-            shuffle(ordering.begin(), ordering.end(), g);
+            iota(ordering.begin(), ordering.end(), 0);
+            random_shuffle(ordering.begin(), ordering.end());
 
             // Go over agents in decreasing order of priority
             for (int i = 0; i < num_of_agents; i++)
@@ -1591,6 +1590,7 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
                 {
                     iteration++;
                     found = false;
+                    agent_itself_failed = iteration;
                     break;
                 }
                 for (int j = i + 1; j < num_of_agents; j++)
@@ -1609,9 +1609,17 @@ GICBSSearch::GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w
                 break;
             }
         }
+        
+        // Find the max size of the priority-connected agent
+        max_ma_size = 0;
+        for (size_t i = 0; i < num_of_agents; i++)
+        {
+            size_t tmp_size = findMetaAgent(*dummy_start, i).size();
+        }
     }
     else
     {
+        solver_name = "PBS";
         dummy_start->priorities = vector<vector<bool>>(num_of_agents, vector<bool>(num_of_agents, false));
         for (int i = 0; i < num_of_agents; i++)
         {

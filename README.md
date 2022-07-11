@@ -9,7 +9,7 @@ sudo apt install libboost-all-dev
 After you installed both libraries and downloaded the source code, go to \<PATH>/PBS and run the following commands:
 ```shell script
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=RELEASE ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ``` 
 
@@ -23,7 +23,9 @@ Then, you are able to run the code (with cutoff time limited to 60 seconds):
 - -a path to the agent scen
 - -o path to the output file
 - -k number of agents
-- -c methods for conflict selection
+- -s random seed (*default: -1*)
+    - -1: set the random seed according to the current time
+- -c methods for conflict selection (*default: 0*)
     - 0: traversing agent indices
     - 1: randomly
     - 2: earliest
@@ -33,7 +35,7 @@ Then, you are able to run the code (with cutoff time limited to 60 seconds):
     - 6: DFS agent order
     - 7: minimum additional priority constraints
     - 8: maximum additional priority constraints
-- -d debug log settings
+- -d debug log settings (*default: 0*)
     - 0: write the results in the output file without showing anything
     - 1: show node expansions (including the selected conflict) and generations during the search
     - 2: show the detailed logs (e.g. paths of agents) during the search

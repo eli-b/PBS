@@ -69,24 +69,10 @@ int main(int argc, char** argv)
     bool fixed_prior = vm["fixedOrder"].as<bool>();
     int scr = vm["debug"].as<int>();
     int conf_mode = vm["conf"].as<int>();
-    GICBSSearch icbs(ml, al, 1.0, egr, constraint_strategy::ICBS, fixed_prior, scr, conf_mode);
+    GICBSSearch icbs(ml, al, 1.0, egr, fixed_prior, scr, conf_mode);
     bool res;
     res = icbs.runGICBSSearch();
 
-    if (!icbs.node_stat.empty())
-    {
-        ofstream stats;
-        stats.open(vm["output"].as<string>(), ios::app);
-        stats << get<0>(icbs.node_stat.front()) << "," <<
-              get<1>(icbs.node_stat.front()) << "," <<
-              get<2>(icbs.node_stat.front()) << "," <<
-              get<3>(icbs.node_stat.front()) << "," <<
-              get<4>(icbs.node_stat.front()) << "," <<
-              get<5>(icbs.node_stat.front()) << "," <<
-              get<6>(icbs.node_stat.front()) << endl;
-        stats.close();
-        return 0;
-    }
     std::ifstream infile(vm["output"].as<string>());
     bool exist = infile.good();
     infile.close();
@@ -97,7 +83,8 @@ int main(int argc, char** argv)
                  "solution cost,root g value,#pathfinding," <<
                  "preprocessing runtime,computeh runtime,conflictdetection runtime,listoperation runtime,lowlevel runtime,gen child runtime," <<
                  "updatecons runtime,updatepaths runtime," <<
-                 "orig agent failed,another agent failed,solver name,instance name," <<
+                 "orig agent failed,another agent failed," <<
+                 "solver name,instance name," <<
                  "#agents,max_ma_size,num_ex_conf,num_in_conf,num_total_conf," <<
                  "num_0child,num_1child,num_2child" << endl;
         addHeads.close();
@@ -113,8 +100,8 @@ int main(int argc, char** argv)
           icbs.runtime_conflictdetection / CLOCKS_PER_SEC << "," << icbs.runtime_listoperation / CLOCKS_PER_SEC << "," <<
           icbs.runtime_lowlevel / CLOCKS_PER_SEC << "," << icbs.runtime_gen_child / CLOCKS_PER_SEC  << "," << 
           icbs.runtime_updatecons / CLOCKS_PER_SEC << "," << icbs.runtime_updatepaths / CLOCKS_PER_SEC << "," <<
-          icbs.agent_itself_failed << "," << icbs.lower_priority_agent_failed <<
-          ",PBS," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << "," << 
+          icbs.agent_itself_failed << "," << icbs.lower_priority_agent_failed << ","<<
+          icbs.solver_name << "," << vm["agents"].as<string>() << "," << vm["agentNum"].as<int>() << "," << 
           icbs.max_ma_size << "," << icbs.num_ex_conf << "," << icbs.num_in_conf << "," << icbs.num_total_conf << "," <<
           icbs.num_0child << "," << icbs.num_1child << "," << icbs.num_2child << endl;
     stats.close();

@@ -10,11 +10,6 @@
 
 #define TIME_LIMIT 60 * CLOCKS_PER_SEC
 
-enum constraint_strategy
-{
-    ECBS, N_ECBS, ICBS, N_ICBS, CBSH, N_CBSH, CBSH_CR, CBSH_R, CBSH_RM, STRATEGY_COUNT
-};
-
 class MapLoader
 {
 public:

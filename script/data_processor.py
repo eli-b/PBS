@@ -23,7 +23,7 @@ class DataProcessor:
         self.max_x_num = 5  # on the x-axis
         self.fig_size:Tuple[int,int] = (12, 9) # (17, 8)
         self.marker_size:int = 25
-        self.line_width:float = 0.0 # 4.0
+        self.line_width:float = 4.0
         self.mark_width:float = 4.0
         self.text_size:int = 40
         self.fig_axs:Dict[int, Tuple[int,int]] = {1: (1,1),
@@ -103,7 +103,7 @@ class DataProcessor:
                 for ag_num in _map_['num_of_agents']:
                     for scen in _map_['scens']:
                         data_frame = util.get_csv_instance(self.config['exp_path'], _map_['name'],
-                                                           scen, ag_num, solver)
+                                                           scen, ag_num, solver['name'])
                         for _, row in data_frame.iterrows():
                             if in_index == 'runtime':
                                 tmp_val = min(row[in_index], 60)
@@ -161,7 +161,7 @@ class DataProcessor:
                     for scen in _map_['scens']:
                         tmp_ins_num = 0
                         data_frame = util.get_csv_instance(self.config['exp_path'], _map_['name'],
-                                                           scen, ag_num, solver)
+                                                           scen, ag_num, solver['name'])
                         for _, row in data_frame.iterrows():
                             tmp_ins_num += 1
                             if in_index == 'succ':
@@ -183,7 +183,7 @@ class DataProcessor:
                                 total_val += row[in_index]
 
                         total_num += self.config['ins_num']
-                        if (tmp_ins_num != self.config['ins_num']):
+                        if tmp_ins_num != self.config['ins_num']:
                             logging.warning('Ins number does no match at map:%s, scen:%s, ag:%d',
                                             _map_['name'], scen, ag_num)
 
@@ -234,7 +234,7 @@ class DataProcessor:
                     for ag_num in _map_['num_of_agents']:
                         for scen in _map_['scens']:
                             data_frame = util.get_csv_instance(self.config['exp_path'],
-                                                    _map_['name'], scen, ag_num, solver)
+                                                    _map_['name'], scen, ag_num, solver['name'])
                             for _, row in data_frame.iterrows():
                                 if in_index == 'succ':
                                     if row['solution cost'] >= 0 and \
@@ -554,6 +554,9 @@ class DataProcessor:
     #     in_axs.set_ylabel(self.y_labels[y_index], fontsize=self.text_size)
 
     def plot_fig(self, x_index:str='num', y_index:str='succ'):
+        tmp_lw = self.line_width
+        if x_index == 'ins':
+            self.line_width = 0.0
         # Get the result from the experiments
         result = self.get_val(x_index, y_index)
 
@@ -581,8 +584,15 @@ class DataProcessor:
                 plt.legend(loc="upper left", fontsize=self.text_size)
             else:
                 plt.legend(loc="best", fontsize=self.text_size)
-        fig_name = x_index + '_' + y_index + '_plot.png'
+
+        fig_name = ''  # Set the figure name
+        for _map_ in self.config['maps']:
+            fig_name += _map_['label'] + '_'
+        fig_name += x_index + '_' + y_index + '_plot.png'
         plt.savefig(fig_name)
+        if x_index == 'ins':
+            self.line_width = tmp_lw  # set the line width back
+
         plt.show()
 
     def plot_op(self, x_index:str='num', y_index1:str='#pathfinding', 
@@ -694,6 +704,20 @@ class DataProcessor:
     #     plt.savefig(fig_name)
     #     plt.show()
 
+    def get_ins_from_samples(self, sol_dir:str, sol_names:List[str], 
+                             mode:str='min', objective:str='runtime'):
+        for _map_ in self.config['maps']:
+            for _ag_num_ in _map_['num_of_agents']:
+                for _scen_ in _map_['scens']:
+                    util.create_csv_file(exp_path=self.config['exp_path'],
+                                         map_name=_map_['name'],
+                                         scen=_scen_,
+                                         ag_num=_ag_num_,
+                                         ins_num=self.config['ins_num'],
+                                         sol_dir=sol_dir,
+                                         sol_names=sol_names,
+                                         mode=mode,
+                                         objective=objective)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Take config.yaml as input!')
@@ -703,6 +727,14 @@ if __name__ == '__main__':
 
     # Create data processor
     data_processor = DataProcessor(args.config)
+
+    # Filtering from random (random) sampled solvers
+    SOLVER_DIR = 'PBS_rand'
+    solver_names = ['PBS1_0','PBS1_1','PBS1_2', 'PBS1_3','PBS1_4',
+                    'PBS1_5','PBS1_6','PBS1_7','PBS1_8','PBS1_9']
+    for _m_ in ['min', 'mid', 'max']:
+        data_processor.get_ins_from_samples(sol_dir=SOLVER_DIR, sol_names=solver_names, mode=_m_)
+
     # data_processor.plot_fig(x_index='num', y_index='succ')
     # data_processor.plot_fig(x_index='num', y_index='runtime')
     # data_processor.plot_fig(x_index='num', y_index='max_ma_size')
@@ -711,8 +743,8 @@ if __name__ == '__main__':
     # data_processor.plot_fig(x_index='num', y_index='#pathfinding')
 
     # data_processor.plot_fig(x_index='ins', y_index='max_ma_size')
-    data_processor.plot_op(x_index='ins',y_index1='#pathfinding',
-                           y_index2='#high-level generated',use_op='div')
+    # data_processor.plot_op(x_index='ins',y_index1='#pathfinding',
+    #                        y_index2='#high-level generated',use_op='div')
     # data_processor.plot_fig(x_index='ins', y_index='solution cost')
     # data_processor.plot_fig(x_index='ins', y_index='num_0child')
 

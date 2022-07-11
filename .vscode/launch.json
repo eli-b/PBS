@@ -25,8 +25,8 @@
                 "-o${workspaceFolder}/result_debug.csv", 
                 "-k100",
                 "-f", "false",
-                "-d", "3",
-                "-c", "1"
+                "-d", "2",
+                "-c", "7"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -46,8 +46,9 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/script/data_processor.py",
-            "args": ["--config", "${workspaceFolder}/script/config.yaml"],
+            // "args": ["--config", "${workspaceFolder}/script/config.yaml"],
             // "args": ["--config", "${workspaceFolder}/script/config_hang.yaml"],
+            "args": ["--config", "${workspaceFolder}/script/config_rand.yaml"],
             "console": "integratedTerminal"
         },
         {

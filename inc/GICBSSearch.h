@@ -12,7 +12,7 @@
 class GICBSSearch
 {
 public:
-    constraint_strategy cons_strategy;
+    string solver_name;
     bool fixed_prior;
     double runtime = 0;
     double pre_runtime = 0;
@@ -25,7 +25,6 @@ public:
     double runtime_updatecons;
     uint64_t agent_itself_failed = 0;
     uint64_t lower_priority_agent_failed = 0;
-    list<tuple<int, int, int, int, int, int, int>> node_stat;
     // Note the heap only gives preference to higher depth, making it not a heap but a kind of stack
     typedef boost::heap::pairing_heap<GICBSNode*, boost::heap::compare<GICBSNode::compare_node>> heap_open_t;
 
@@ -74,7 +73,7 @@ public:
 
     vector<SingleAgentICBS*> search_engines;  // used to find (single) agents' paths and mdd
 
-    GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr, constraint_strategy c,
+    GICBSSearch(const MapLoader& ml, const AgentsLoader& al, double f_w, const EgraphReader& egr,
                 bool fixed_prior=false, int scr=0, int mode=0);
     ~GICBSSearch();
 
@@ -118,6 +117,11 @@ public:
     void printAgentPath(int ag, const vector<PathEntry>& in_path) const;
     void printConflicts(const GICBSNode& n) const
     {
+        if (n.conflict == nullptr)
+        {
+            cout << "NULL" << endl;
+            return;
+        }
         cout << "<a1:" << get<0>(*n.conflict) << ", a2:" << get<1>(*n.conflict) << 
         ", v1:" << get<2>(*n.conflict) << ", v2:" << get<3>(*n.conflict) << 
         ", t:" << get<4>(*n.conflict) << ">" << endl;
